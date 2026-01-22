@@ -755,16 +755,83 @@
             document.getElementById('last-updated').textContent = `Updated ${timeStr}`;
         }
 
-        function init() {
+        async function init() {
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    
+    try {
+        const response = await fetch('/api/stories');
+        const data = await response.json();
+        
+        if (data.stories && data.stories.length > 0) {
+            const stories = data.stories;
+            
+            // Hero story
+            if (stories[0]) {
+                renderHero({
+                    headline: stories[0].headline,
+                    url: stories[0].url,
+                    imageUrl: stories[0].imageUrl || 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=900&q=80',
+                    source: stories[0].source.toUpperCase(),
+                    excerpt: stories[0].excerpt || ''
+                });
+            }
+            
+            // Featured stories
+            if (stories[1] && stories[2]) {
+                renderFeatured(
+                    { headline: stories[1].headline, url: stories[1].url, imageUrl: stories[1].imageUrl || 'https://images.unsplash.com/photo-1611605698335-8b1569810432?w=600&q=80', source: stories[1].source.toUpperCase() },
+                    { headline: stories[2].headline, url: stories[2].url, imageUrl: stories[2].imageUrl || 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&q=80', source: stories[2].source.toUpperCase() }
+                );
+            }
+            
+            // Top 10
+            const top10 = stories.slice(0, 10).map((s, i) => ({
+                rank: i + 1,
+                headline: s.headline,
+                url: s.url,
+                source: s.source,
+                hot: i < 5
+            }));
+            renderTop10(top10);
+            
+            // Side columns
+            const leftItems = stories.slice(10, 18).map((s, i) => ({
+                headline: s.headline,
+                url: s.url,
+                source: s.source.toUpperCase(),
+                hot: i < 3,
+                hasImage: i === 0,
+                imageUrl: s.imageUrl
+            }));
+            renderColumn('left-column', leftItems.length ? leftItems : SAMPLE_DATA.leftColumn);
+            
+            const rightItems = stories.slice(18, 27).map((s, i) => ({
+                headline: s.headline,
+                url: s.url,
+                source: s.source.toUpperCase(),
+                hot: i < 2,
+                hasImage: i === 0,
+                imageUrl: s.imageUrl
+            }));
+            renderColumn('right-column', rightItems.length ? rightItems : SAMPLE_DATA.rightColumn);
+        } else {
+            // Fallback to sample data
             renderHero(SAMPLE_DATA.story1);
             renderFeatured(SAMPLE_DATA.story2, SAMPLE_DATA.story3);
             renderTop10(SAMPLE_DATA.top10);
             renderColumn('left-column', SAMPLE_DATA.leftColumn);
             renderColumn('right-column', SAMPLE_DATA.rightColumn);
-            updateDateTime();
-            setInterval(updateDateTime, 60000);
         }
-
+    } catch (error) {
+        console.error('Error fetching stories:', error);
+        // Fallback to sample data
+        renderHero(SAMPLE_DATA.story1);
+        renderFeatured(SAMPLE_DATA.story2, SAMPLE_DATA.story3);
+        renderTop10(SAMPLE_DATA.top10);
+        renderColumn('left-column', SAMPLE_DATA.leftColumn);
+        renderColumn('right-column', SAMPLE_DATA.rightColumn);
+    }
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
