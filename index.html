@@ -3,31 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>McMahon.News — Top 10 Independent News Stories of the Day</title>
-    <meta name="description" content="McMahon.News delivers the Top 10 news stories of the day from independent journalists. No corporate media. Tucker Carlson, Matt Taibbi, Glenn Greenwald, Breaking Points, and more.">
-    <meta name="keywords" content="independent news, alternative media, Tucker Carlson, Matt Taibbi, Glenn Greenwald, Breaking Points, Drop Site News, news aggregator">
-    <meta property="og:title" content="McMahon.News — Top 10 Independent News Stories">
-    <meta property="og:description" content="The stories that matter from voices you trust. 100% independent, zero corporate media.">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
+    <title>McMahon.News — Top 10 Independent News Stories</title>
+    <meta name="description" content="McMahon.News delivers the Top 10 news stories of the day from independent journalists. 100% independent, zero corporate media.">
+    <meta property="og:title" content="McMahon.News — Independent News">
+    <meta property="og:description" content="100% Independent. Zero Corporate Media.">
     <link rel="canonical" href="https://mcmahon.news">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Georgia&family=Arial:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f8f8;
-            --bg-card: #ffffff;
-            --accent: #cc0000;
-            --accent-dark: #aa0000;
-            --text-primary: #111111;
-            --text-secondary: #444444;
-            --text-muted: #888888;
-            --border: #e0e0e0;
-            --border-dark: #cccccc;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -35,805 +18,309 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
-            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.4;
         }
 
         a {
-            color: inherit;
+            color: #000000;
             text-decoration: none;
-            transition: color 0.15s;
         }
 
-        /* Breaking Banner */
-        .breaking-banner {
-            background: var(--accent);
+        a:hover {
+            color: #cc0000;
+        }
+
+        /* Top Banner */
+        .top-banner {
+            background: #cc0000;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 20px;
             text-align: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 2px;
             text-transform: uppercase;
-        }
-
-        .breaking-banner a {
-            color: white;
-            text-decoration: underline;
         }
 
         /* Header */
         header {
-            background: var(--bg-primary);
-            border-bottom: 3px solid var(--text-primary);
-            padding: 25px 20px;
+            background: #ffffff;
+            border-bottom: 2px solid #000000;
+            padding: 20px;
             text-align: center;
         }
 
         .logo {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            letter-spacing: -2px;
-            display: inline-block;
-            line-height: 1;
-        }
-
-        .logo-name {
-            color: var(--text-primary);
-        }
-
-        .logo-dot {
-            color: var(--accent);
-        }
-
-        .tagline {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-top: 8px;
-            font-weight: 500;
-        }
-
-        .header-meta {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 25px;
-            margin-top: 12px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* Hero Section - #1 Story */
-        .hero-section {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .hero-card {
-            display: grid;
-            grid-template-columns: 1.1fr 1fr;
-            gap: 30px;
-            align-items: center;
-        }
-
-        .hero-image {
-            position: relative;
-            border: 3px solid var(--text-primary);
-        }
-
-        .hero-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .hero-rank {
-            position: absolute;
-            top: -12px;
-            left: -12px;
-            background: var(--accent);
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1.8rem;
-            width: 55px;
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hero-content {
-            padding: 10px 0;
-        }
-
-        .hero-source {
-            display: inline-block;
-            background: var(--accent);
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 5px 12px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .hero-headline {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.4rem;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 15px;
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            font-weight: normal;
             letter-spacing: -1px;
         }
 
-        .hero-headline a:hover {
-            color: var(--accent);
+        .logo-name {
+            color: #000000;
         }
 
-        .hero-excerpt {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            line-height: 1.6;
+        .logo-dot {
+            color: #cc0000;
         }
 
-        /* Featured Row - #2 and #3 */
-        .featured-section {
-            max-width: 1200px;
+        .header-meta {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #666666;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 25px 20px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .featured-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-
-        .featured-card {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .featured-image {
-            position: relative;
-            border: 2px solid var(--text-primary);
-        }
-
-        .featured-image img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .featured-rank {
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            background: var(--accent);
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1rem;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .featured-content {
-            padding: 5px 0;
-        }
-
-        .featured-source {
-            font-size: 0.65rem;
-            color: var(--accent);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }
-
-        .featured-headline {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.15rem;
-            font-weight: 600;
-            line-height: 1.25;
-        }
-
-        .featured-headline a:hover {
-            color: var(--accent);
-        }
-
-        /* Main Content Grid */
-        .main-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 25px 20px 40px;
-            display: grid;
-            grid-template-columns: 1fr 340px 1fr;
-            gap: 30px;
-        }
-
-        .column-header {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding-bottom: 12px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--accent);
-        }
-
-        /* Top 10 Box */
-        .top10-box {
-            background: var(--bg-secondary);
-            border: 3px solid var(--accent);
             padding: 20px;
         }
 
-        .top10-header {
+        /* Lead Story */
+        .lead-story {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            border-bottom: 1px solid #cccccc;
         }
 
-        .top10-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent);
+        .lead-headline {
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .lead-headline a:hover {
+            color: #cc0000;
+        }
+
+        .lead-source {
+            font-size: 0.7rem;
+            color: #cc0000;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .top10-subtitle {
-            font-size: 0.65rem;
-            color: var(--text-muted);
+        /* Three Column Layout */
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .column {
+            border-right: 1px solid #eeeeee;
+            padding-right: 20px;
+        }
+
+        .column:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .column-header {
+            font-size: 0.7rem;
+            color: #cc0000;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-top: 4px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #cc0000;
+            font-weight: bold;
         }
 
-        .top10-list {
-            list-style: none;
-        }
-
-        .top10-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px dotted var(--border-dark);
-        }
-
-        .top10-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .top10-rank {
-            flex-shrink: 0;
-            width: 26px;
-            height: 26px;
-            background: var(--text-primary);
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .top10-item.hot .top10-rank {
-            background: var(--accent);
-        }
-
-        .top10-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .top10-headline {
-            font-size: 0.85rem;
-            font-weight: 500;
-            line-height: 1.35;
-        }
-
-        .top10-headline a:hover {
-            color: var(--accent);
-        }
-
-        .top10-item.hot .top10-headline {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .top10-source {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 3px;
-        }
-
-        /* Side Column Headlines */
+        /* Headlines */
         .headline-item {
-            padding: 14px 0;
-            border-bottom: 1px dotted var(--border-dark);
-        }
-
-        .headline-item:first-of-type {
-            padding-top: 0;
+            padding: 10px 0;
+            border-bottom: 1px dotted #dddddd;
         }
 
         .headline-item:last-child {
             border-bottom: none;
         }
 
-        .headline-image {
-            border: 2px solid var(--text-primary);
-            margin-bottom: 10px;
-        }
-
-        .headline-image img {
-            width: 100%;
-            height: 130px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .headline-source {
-            font-size: 0.6rem;
-            color: var(--accent);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
         .headline-text {
             font-size: 0.9rem;
-            font-weight: 500;
-            line-height: 1.35;
+            font-weight: bold;
+            line-height: 1.3;
         }
 
         .headline-text a:hover {
-            color: var(--accent);
+            color: #cc0000;
         }
 
-        .headline-text.hot {
-            color: var(--accent);
-            font-weight: 600;
+        .headline-source {
+            font-size: 0.65rem;
+            color: #999999;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        .hot .headline-text {
+            color: #cc0000;
         }
 
         /* Footer */
         footer {
-            background: var(--bg-secondary);
-            border-top: 3px solid var(--text-primary);
-            padding: 30px 20px;
+            background: #f5f5f5;
+            border-top: 2px solid #000000;
+            padding: 20px;
             text-align: center;
+            margin-top: 30px;
         }
 
         .footer-tagline {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: Georgia, serif;
             font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            letter-spacing: 1px;
+            font-style: italic;
+            color: #333333;
             margin-bottom: 10px;
         }
 
-        .footer-text {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .footer-links {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        .footer-links a {
+        .footer-copy {
             font-size: 0.7rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
-
-        .footer-links a:hover {
-            color: var(--accent);
+            color: #999999;
         }
 
         /* Responsive */
-        @media (max-width: 1000px) {
-            .main-grid {
+        @media (max-width: 768px) {
+            .columns {
                 grid-template-columns: 1fr;
+                gap: 0;
             }
 
-            .hero-card {
-                grid-template-columns: 1fr;
+            .column {
+                border-right: none;
+                border-bottom: 1px solid #eeeeee;
+                padding-right: 0;
+                padding-bottom: 20px;
+                margin-bottom: 20px;
             }
 
-            .featured-grid {
-                grid-template-columns: 1fr;
+            .column:last-child {
+                border-bottom: none;
             }
 
-            .featured-card {
-                grid-template-columns: 140px 1fr;
-            }
-        }
-
-        @media (max-width: 600px) {
             .logo {
-                font-size: 2.5rem;
+                font-size: 2.2rem;
             }
 
-            .hero-headline {
-                font-size: 1.7rem;
-            }
-
-            .featured-card {
-                grid-template-columns: 1fr;
-            }
-
-            .featured-image img {
-                height: 180px;
+            .lead-headline {
+                font-size: 1.4rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Breaking News Banner -->
-    <div class="breaking-banner">
-100% INDEPENDENT. ZERO CORPORATE MEDIA.
+    <div class="top-banner">
+        100% INDEPENDENT. ZERO CORPORATE MEDIA.
     </div>
 
     <header>
         <a href="/" class="logo">
             <span class="logo-name">McMahon</span><span class="logo-dot">.NEWS</span>
         </a>
-        <div class="tagline">Top 10 Stories of the Day</div>
         <div class="header-meta">
-            <span id="current-date"></span>
-            <span id="last-updated"></span>
-            <div class="live-indicator">
-                <span class="live-dot"></span>
-                LIVE
-            </div>
+            <span id="current-date"></span> • <span id="last-updated"></span>
         </div>
     </header>
 
-    <!-- Hero Section - #1 Story -->
-    <section class="hero-section" id="hero-section">
-        <!-- Populated by JS -->
-    </section>
-
-    <!-- Featured Stories #2 and #3 -->
-    <section class="featured-section" id="featured-section">
-        <div class="featured-grid" id="featured-grid">
-            <!-- Populated by JS -->
-        </div>
-    </section>
-
-    <!-- Main Content Grid -->
-    <div class="main-grid">
-        <!-- Left Column -->
-        <div class="column" id="left-column">
-            <div class="column-header">Trending</div>
+    <main class="main-container">
+        <!-- Lead Story -->
+        <div class="lead-story" id="lead-story">
+            <div class="lead-source">LOADING...</div>
+            <h1 class="lead-headline"><a href="#">Loading top story...</a></h1>
         </div>
 
-        <!-- Center: Top 10 -->
-        <div class="column">
-            <div class="top10-box" id="top10-box">
-                <div class="top10-header">
-                    <div class="top10-title">★ TODAY'S TOP 10 ★</div>
-                    <div class="top10-subtitle">The Stories That Matter</div>
-                </div>
-                <ul class="top10-list" id="top10-list">
-                </ul>
+        <!-- Three Columns -->
+        <div class="columns">
+            <div class="column" id="column-left">
+                <div class="column-header">Top Stories</div>
+            </div>
+            <div class="column" id="column-center">
+                <div class="column-header">Independent Voices</div>
+            </div>
+            <div class="column" id="column-right">
+                <div class="column-header">Latest</div>
             </div>
         </div>
-
-        <!-- Right Column -->
-        <div class="column" id="right-column">
-            <div class="column-header">Independent Voices</div>
-        </div>
-    </div>
+    </main>
 
     <footer>
-        <div class="footer-tagline">Corporate media is dead. Long live independent news.</div>        <div class="footer-text">© 2026 McMahon.News</div>
-        <div class="footer-links">
-            <a href="#">About</a>
-            <a href="#">Tip Line</a>
-            <a href="#">Contact</a>
-        </div>
+        <div class="footer-tagline">Corporate media is dead. Long live independent news.</div>
+        <div class="footer-copy">© 2026 McMahon.News</div>
     </footer>
 
     <script>
-        const SAMPLE_DATA = {
-            story1: {
-                headline: "TUCKER CARLSON: 'They're Lying About Everything — And They Know We Know'",
-                url: "#",
-                imageUrl: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=900&q=80",
-                source: "TUCKER CARLSON",
-                excerpt: "In his latest monologue, Tucker breaks down the systematic deception from Washington and why establishment media is losing control of the narrative."
-            },
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+            });
+            document.getElementById('last-updated').textContent = 'Updated ' + now.toLocaleTimeString('en-US', {
+                hour: 'numeric', minute: '2-digit'
+            });
+        }
 
-            story2: {
-                headline: "MATT TAIBBI: 'Twitter Files' Expose Massive FBI Censorship Operation",
-                url: "#",
-                imageUrl: "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=600&q=80",
-                source: "MATT TAIBBI"
-            },
-
-            story3: {
-                headline: "BREAKING POINTS: Krystal & Saagar Unite Left and Right on Border Crisis",
-                url: "#",
-                imageUrl: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&q=80",
-                source: "BREAKING POINTS"
-            },
-
-            top10: [
-                { rank: 1, headline: "TUCKER CARLSON: 'They're Lying About Everything'", url: "#", hot: true, source: "tucker carlson" },
-                { rank: 2, headline: "MATT TAIBBI: Twitter Files Expose FBI Censorship", url: "#", hot: true, source: "matt taibbi" },
-                { rank: 3, headline: "BREAKING POINTS: Left & Right Unite on Border", url: "#", hot: true, source: "breaking points" },
-                { rank: 4, headline: "JEFFREY SACHS: 'Ukraine Policy Is Complete Insanity'", url: "#", hot: false, source: "jeffrey sachs" },
-                { rank: 5, headline: "DROP SITE NEWS: Pentagon Audit Reveals Missing Billions", url: "#", hot: true, source: "drop site news" },
-                { rank: 6, headline: "COL. MACGREGOR: 'NATO Has Already Lost This War'", url: "#", hot: false, source: "col. macgregor" },
-                { rank: 7, headline: "GLENN GREENWALD: FBI 'Purging' Conservative Agents", url: "#", hot: false, source: "glenn greenwald" },
-                { rank: 8, headline: "SEYMOUR HERSH: New Nord Stream Bombshell...", url: "#", hot: true, source: "seymour hersh" },
-                { rank: 9, headline: "CANDACE OWENS: 'They Can't Silence Us Anymore'", url: "#", hot: false, source: "candace owens" },
-                { rank: 10, headline: "DAVE SMITH: 'Libertarians Were Right About Everything'", url: "#", hot: false, source: "dave smith" }
-            ],
-
-            leftColumn: [
-                { headline: "GLENN GREENWALD: DOJ Seizes Reporter's Phone Records", hot: true, url: "#", hasImage: true, imageUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&q=80", source: "GLENN GREENWALD" },
-                { headline: "DROP SITE NEWS: Exposing the Military Industrial Complex", hot: true, url: "#", source: "DROP SITE NEWS" },
-                { headline: "MATT TAIBBI: California Proposes Wealth Tax on Residents Who LEFT", hot: false, url: "#", source: "MATT TAIBBI" },
-                { headline: "MICHAEL SHELLENBERGER: 67% Say Country on Wrong Track", hot: false, url: "#", source: "SHELLENBERGER" },
-                { headline: "MAX BLUMENTHAL: 'Journalist' EXPOSED as CIA Asset...", hot: false, url: "#", source: "MAX BLUMENTHAL" },
-                { headline: "STEVE BANNON: Migrant Crisis Overwhelms NYC Shelters", hot: true, url: "#", source: "STEVE BANNON" },
-                { headline: "NICK FUENTES: 'America First Is Winning Big'", hot: true, url: "#", source: "NICK FUENTES" },
-                { headline: "BREAKING POINTS: Establishment Panic Mode Activated", hot: true, url: "#", source: "BREAKING POINTS" }
-            ],
-
-            rightColumn: [
-                { headline: "TIM DILLON: Destroys Corporate Media Hypocrisy", hot: true, url: "#", hasImage: true, imageUrl: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&q=80", source: "TIM DILLON" },
-                { headline: "DAVE SMITH: 'The Libertarian Moment Is Here'", hot: false, url: "#", source: "DAVE SMITH" },
-                { headline: "JEFFREY SACHS: 'Ukraine Policy Is Insane'", hot: false, url: "#", source: "JEFFREY SACHS" },
-                { headline: "COL. MACGREGOR: 'NATO Has Already Lost'", hot: false, url: "#", source: "COL. MACGREGOR" },
-                { headline: "KRYSTAL BALL: The Establishment Is Collapsing", hot: true, url: "#", source: "BREAKING POINTS" },
-                { headline: "SAAGAR ENJETI: 'Populism Is the Future'", hot: false, url: "#", source: "BREAKING POINTS" },
-                { headline: "CANDACE OWENS: 'They Fear Our Movement'", hot: false, url: "#", source: "CANDACE OWENS" },
-                { headline: "JUDGE NAPOLITANO: SCOTUS 'Captured by Establishment'", hot: false, url: "#", source: "JUDGE NAPOLITANO" },
-                { headline: "DROP SITE NEWS: The Real Story They Won't Tell You", hot: true, url: "#", source: "DROP SITE NEWS" }
-            ]
-        };
-
-        function renderHero(story) {
-            document.getElementById('hero-section').innerHTML = `
-                <article class="hero-card">
-                    <div class="hero-image">
-                        <img src="${story.imageUrl}" alt="${story.headline}" loading="eager">
-                        <div class="hero-rank">1</div>
-                    </div>
-                    <div class="hero-content">
-                        <div class="hero-source">${story.source}</div>
-                        <h1 class="hero-headline">
-                            <a href="${story.url}" target="_blank">${story.headline}</a>
-                        </h1>
-                        <p class="hero-excerpt">${story.excerpt}</p>
-                    </div>
-                </article>
+        function renderLeadStory(story) {
+            document.getElementById('lead-story').innerHTML = `
+                <div class="lead-source">${story.source}</div>
+                <h1 class="lead-headline"><a href="${story.url}" target="_blank">${story.headline}</a></h1>
             `;
         }
 
-        function renderFeatured(story2, story3) {
-            document.getElementById('featured-grid').innerHTML = `
-                <article class="featured-card">
-                    <div class="featured-image">
-                        <img src="${story2.imageUrl}" alt="${story2.headline}" loading="lazy">
-                        <div class="featured-rank">2</div>
-                    </div>
-                    <div class="featured-content">
-                        <div class="featured-source">${story2.source}</div>
-                        <h2 class="featured-headline">
-                            <a href="${story2.url}" target="_blank">${story2.headline}</a>
-                        </h2>
-                    </div>
-                </article>
-                <article class="featured-card">
-                    <div class="featured-image">
-                        <img src="${story3.imageUrl}" alt="${story3.headline}" loading="lazy">
-                        <div class="featured-rank">3</div>
-                    </div>
-                    <div class="featured-content">
-                        <div class="featured-source">${story3.source}</div>
-                        <h2 class="featured-headline">
-                            <a href="${story3.url}" target="_blank">${story3.headline}</a>
-                        </h2>
-                    </div>
-                </article>
-            `;
-        }
-
-        function renderTop10(stories) {
-            document.getElementById('top10-list').innerHTML = stories.map(s => `
-                <li class="top10-item ${s.hot ? 'hot' : ''}">
-                    <div class="top10-rank">${s.rank}</div>
-                    <div class="top10-content">
-                        <div class="top10-headline">
-                            <a href="${s.url}" target="_blank">${s.headline}</a>
-                        </div>
-                        <div class="top10-source">${s.source}</div>
-                    </div>
-                </li>
-            `).join('');
-        }
-
-        function renderColumn(containerId, items) {
+        function renderColumn(containerId, stories, headerText) {
             const container = document.getElementById(containerId);
-            const header = container.querySelector('.column-header');
-            let html = header.outerHTML;
-
-            items.forEach(item => {
+            let html = `<div class="column-header">${headerText}</div>`;
+            
+            stories.forEach((story, index) => {
                 html += `
-                    <article class="headline-item">
-                        ${item.hasImage ? `
-                            <div class="headline-image">
-                                <a href="${item.url}" target="_blank">
-                                    <img src="${item.imageUrl}" alt="${item.headline}" loading="lazy">
-                                </a>
-                            </div>
-                        ` : ''}
-                        <div class="headline-source">${item.source}</div>
-                        <div class="headline-text ${item.hot ? 'hot' : ''}">
-                            <a href="${item.url}" target="_blank">${item.headline}</a>
+                    <div class="headline-item ${index < 2 ? 'hot' : ''}">
+                        <div class="headline-text">
+                            <a href="${story.url}" target="_blank">${story.headline}</a>
                         </div>
-                    </article>
+                        <div class="headline-source">${story.source}</div>
+                    </div>
                 `;
             });
-
+            
             container.innerHTML = html;
         }
 
-        function updateDateTime() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
-            const timeStr = now.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit'
-            });
-
-            document.getElementById('current-date').textContent = dateStr;
-            document.getElementById('last-updated').textContent = `Updated ${timeStr}`;
+        async function loadStories() {
+            try {
+                const response = await fetch('/api/stories');
+                const data = await response.json();
+                
+                if (data.stories && data.stories.length > 0) {
+                    const stories = data.stories;
+                    
+                    // Lead story
+                    renderLeadStory(stories[0]);
+                    
+                    // Columns - distribute stories
+                    renderColumn('column-left', stories.slice(1, 8), 'Top Stories');
+                    renderColumn('column-center', stories.slice(8, 15), 'Independent Voices');
+                    renderColumn('column-right', stories.slice(15, 22), 'Latest');
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+            }
         }
 
-        async function init() {
-    updateDateTime();
-    setInterval(updateDateTime, 60000);
-    
-    try {
-        const response = await fetch('/api/stories');
-        const data = await response.json();
+        // Initialize
+        updateDateTime();
+        loadStories();
         
-        if (data.stories && data.stories.length > 0) {
-            const stories = data.stories;
-            
-            // Hero story
-            if (stories[0]) {
-                renderHero({
-                    headline: stories[0].headline,
-                    url: stories[0].url,
-                    imageUrl: stories[0].imageUrl || 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=900&q=80',
-                    source: stories[0].source.toUpperCase(),
-                    excerpt: stories[0].excerpt || ''
-                });
-            }
-            
-            // Featured stories
-            if (stories[1] && stories[2]) {
-                renderFeatured(
-                    { headline: stories[1].headline, url: stories[1].url, imageUrl: stories[1].imageUrl || 'https://images.unsplash.com/photo-1611605698335-8b1569810432?w=600&q=80', source: stories[1].source.toUpperCase() },
-                    { headline: stories[2].headline, url: stories[2].url, imageUrl: stories[2].imageUrl || 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&q=80', source: stories[2].source.toUpperCase() }
-                );
-            }
-            
-            // Top 10
-            const top10 = stories.slice(0, 10).map((s, i) => ({
-                rank: i + 1,
-                headline: s.headline,
-                url: s.url,
-                source: s.source,
-                hot: i < 5
-            }));
-            renderTop10(top10);
-            
-            // Side columns
-            const leftItems = stories.slice(10, 18).map((s, i) => ({
-                headline: s.headline,
-                url: s.url,
-                source: s.source.toUpperCase(),
-                hot: i < 3,
-                hasImage: i === 0,
-                imageUrl: s.imageUrl
-            }));
-            renderColumn('left-column', leftItems.length ? leftItems : SAMPLE_DATA.leftColumn);
-            
-            const rightItems = stories.slice(18, 27).map((s, i) => ({
-                headline: s.headline,
-                url: s.url,
-                source: s.source.toUpperCase(),
-                hot: i < 2,
-                hasImage: i === 0,
-                imageUrl: s.imageUrl
-            }));
-            renderColumn('right-column', rightItems.length ? rightItems : SAMPLE_DATA.rightColumn);
-        } else {
-            // Fallback to sample data
-            renderHero(SAMPLE_DATA.story1);
-            renderFeatured(SAMPLE_DATA.story2, SAMPLE_DATA.story3);
-            renderTop10(SAMPLE_DATA.top10);
-            renderColumn('left-column', SAMPLE_DATA.leftColumn);
-            renderColumn('right-column', SAMPLE_DATA.rightColumn);
-        }
-    } catch (error) {
-        console.error('Error fetching stories:', error);
-        // Fallback to sample data
-        renderHero(SAMPLE_DATA.story1);
-        renderFeatured(SAMPLE_DATA.story2, SAMPLE_DATA.story3);
-        renderTop10(SAMPLE_DATA.top10);
-        renderColumn('left-column', SAMPLE_DATA.leftColumn);
-        renderColumn('right-column', SAMPLE_DATA.rightColumn);
-    }
-}
-        document.addEventListener('DOMContentLoaded', init);
+        // Refresh every 5 minutes
+        setInterval(updateDateTime, 60000);
+        setInterval(loadStories, 5 * 60 * 1000);
     </script>
 </body>
 </html>
