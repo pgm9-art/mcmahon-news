@@ -216,3 +216,4 @@ refreshStories().then(() => {
 });
 
 // Refresh every hour
+setInterval(refreshStories, 60 * 60 * 1000);
