@@ -12,56 +12,48 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Source weights - prioritize daily content creators
-const SOURCE_WEIGHTS = {
-    // Top Tier - Daily content
-    'Tucker Carlson': 1.0,
-    'Glenn Greenwald': 1.0,
-    'Nick Fuentes': 1.0,
-    'Judge Napolitano': 1.0,
-    'Dave Smith': 1.0,
-    'Breaking Points': 1.0,
-    'Drop Site News': 1.0,
-    'Redacted': 1.0,
-    
-    // Mid Tier
-    'Candace Owens': 0.7,
-    'Steve Bannon': 0.7,
-    'Col. Macgregor': 0.7,
-    'Jeffrey Sachs': 0.7,
-    'Tim Dillon': 0.7,
-    'Joe Rogan': 0.7,
-    'Max Blumenthal': 0.7,
-    'The Grayzone': 0.7,
-    
-    // Lower Tier - Less frequent content
-    'Matt Taibbi': 0.4,
-    'Seymour Hersh': 0.4,
-    'Michael Shellenberger': 0.4
-};
+// X Bearer Token
+const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-// RSS feeds for independent sources
+// X accounts to monitor (primary news source)
+const X_ACCOUNTS = [
+    { handle: 'TuckerCarlson', name: 'Tucker Carlson', weight: 1.0 },
+    { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
+    { handle: 'NickJFuentes', name: 'Nick Fuentes', weight: 1.0 },
+    { handle: 'Judgenap', name: 'Judge Napolitano', weight: 1.0 },
+    { handle: 'ComicDaveSmith', name: 'Dave Smith', weight: 0.9 },
+    { handle: 'BreakingPoints', name: 'Breaking Points', weight: 1.0 },
+    { handle: 'KrsytalBall', name: 'Krystal Ball', weight: 0.9 },
+    { handle: 'esikilar', name: 'Saagar Enjeti', weight: 0.9 },
+    { handle: 'DropsiteNews', name: 'Drop Site News', weight: 1.0 },
+    { handle: 'RealCandaceO', name: 'Candace Owens', weight: 0.8 },
+    { handle: 'WarRoomPandemic', name: 'Steve Bannon', weight: 0.8 },
+    { handle: 'Douglasmacgregor', name: 'Col. Macgregor', weight: 0.8 },
+    { handle: 'JeffreySachs', name: 'Jeffrey Sachs', weight: 0.8 },
+    { handle: 'RedactedNews', name: 'Redacted', weight: 0.8 },
+    { handle: 'mtaibbi', name: 'Matt Taibbi', weight: 0.5 },
+    { handle: 'MaxBlumenthal', name: 'Max Blumenthal', weight: 0.7 },
+    { handle: 'ScottRitter', name: 'Scott Ritter', weight: 0.7 }
+];
+
+// RSS feeds for articles/videos (secondary source - filtered for news)
 const RSS_FEEDS = [
-    // Top Tier - Daily
-    { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsox8LQ1disc39gKMO7SBDg', weight: 1.0 },
-    { name: 'Glenn Greenwald', url: 'https://greenwald.substack.com/feed', weight: 1.0 },
-    { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCULvqbr5KVJqa5cMGvfgx7A', weight: 1.0 },
-    { name: 'Drop Site News', url: 'https://www.dropsitenews.com/feed', weight: 1.0 },
-    { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC7MpzwYC_T_V1HvxSWu9f0g', weight: 1.0 },
-    { name: 'Dave Smith', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCKMijXgeVTgP4C8EXVSs7Sw', weight: 1.0 },
-    { name: 'Nick Fuentes', url: 'https://rumble.com/c/CozyTV/feed', weight: 1.0 },
-    { name: 'Redacted', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCR-dJMi0d8BXxj5PTGCP12Q', weight: 1.0 },
-    
-    // Mid Tier
-    { name: 'Steve Bannon', url: 'https://rumble.com/c/Warroom/feed', weight: 0.7 },
-    { name: 'Tim Dillon', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC4woSp8ITBoYDmjkukhEhxg', weight: 0.7 },
-    { name: 'Joe Rogan', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCzQUP1qoWDoEbmsQxvdjxgQ', weight: 0.7 },
-    { name: 'The Grayzone', url: 'https://thegrayzone.com/feed/', weight: 0.7 },
-    
-    // Lower Tier - Less frequent
-    { name: 'Matt Taibbi', url: 'https://www.racket.news/feed', weight: 0.4 },
-    { name: 'Seymour Hersh', url: 'https://seymourhersh.substack.com/feed', weight: 0.4 },
-    { name: 'Michael Shellenberger', url: 'https://public.substack.com/feed', weight: 0.4 }
+    { name: 'Glenn Greenwald', url: 'https://greenwald.substack.com/feed', weight: 1.0, type: 'article' },
+    { name: 'Drop Site News', url: 'https://www.dropsitenews.com/feed', weight: 1.0, type: 'article' },
+    { name: 'The Grayzone', url: 'https://thegrayzone.com/feed/', weight: 0.8, type: 'article' },
+    { name: 'Matt Taibbi', url: 'https://www.racket.news/feed', weight: 0.5, type: 'article' },
+    { name: 'Seymour Hersh', url: 'https://seymourhersh.substack.com/feed', weight: 0.7, type: 'article' },
+    { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsox8LQ1disc39gKMO7SBDg', weight: 1.0, type: 'video' },
+    { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC7MpzwYC_T_V1HvxSWu9f0g', weight: 1.0, type: 'video' },
+    { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCULvqbr5KVJqa5cMGvfgx7A', weight: 1.0, type: 'video' },
+    { name: 'Redacted', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCR-dJMi0d8BXxj5PTGCP12Q', weight: 0.8, type: 'video' }
+];
+
+// Words that indicate NON-news content (filter these out)
+const NON_NEWS_FILTERS = [
+    'episode', 'ep.', 'ep ', '#', 'podcast', 'full show', 'full episode',
+    'compilation', 'best of', 'highlights', 'preview', 'trailer',
+    'subscribe', 'join us', 'live stream starting', 'going live'
 ];
 
 // Corporate media blacklist
@@ -71,15 +63,18 @@ const CORPORATE_BLACKLIST = [
     'reuters.com', 'apnews.com', 'bbc.com', 'theguardian.com', 'politico.com',
     'thehill.com', 'axios.com', 'huffpost.com', 'vox.com', 'vice.com',
     'buzzfeed.com', 'dailybeast.com', 'slate.com', 'salon.com', 'motherjones.com',
-    'thedailywire.com', 'breitbart.com', 'newsmax.com', 'oann.com', 'theblaze.com',
-    'nationalreview.com', 'nypost.com', 'dailymail.co.uk',
-    'forbes.com', 'bloomberg.com', 'businessinsider.com', 'cnbc.com', 'ft.com',
-    'time.com', 'newsweek.com', 'usnews.com', 'latimes.com', 'chicagotribune.com'
+    'forbes.com', 'bloomberg.com', 'businessinsider.com', 'cnbc.com'
 ];
 
 // In-memory cache
 let cachedStories = [];
 let lastFetch = null;
+
+// Check if headline is actual news (not podcast episode)
+function isNewsContent(headline) {
+    const lower = headline.toLowerCase();
+    return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
+}
 
 // Check if URL is from corporate media
 function isCorporateMedia(url) {
@@ -87,37 +82,81 @@ function isCorporateMedia(url) {
     return CORPORATE_BLACKLIST.some(domain => url.toLowerCase().includes(domain));
 }
 
-// Calculate story score with strong recency boost
-function calculateScore(story) {
-    const now = Date.now();
-    const storyDate = new Date(story.pubDate).getTime();
-    const ageHours = (now - storyDate) / (1000 * 60 * 60);
+// Fetch tweets from X API
+async function fetchXPosts() {
+    if (!X_BEARER_TOKEN) {
+        console.log('No X Bearer Token - skipping X API');
+        return [];
+    }
+
+    const stories = [];
     
-    // Strong recency score (40%) - last 6 hours get big boost
-    let recencyScore = 0;
-    if (ageHours < 6) {
-        recencyScore = 40;
-    } else if (ageHours < 12) {
-        recencyScore = 35;
-    } else if (ageHours < 24) {
-        recencyScore = 25;
-    } else if (ageHours < 48) {
-        recencyScore = 15;
-    } else {
-        recencyScore = Math.max(0, 10 - (ageHours / 24));
+    for (const account of X_ACCOUNTS) {
+        try {
+            // Get user ID first
+            const userResponse = await fetch(
+                `https://api.twitter.com/2/users/by/username/${account.handle}`,
+                {
+                    headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` }
+                }
+            );
+            
+            if (!userResponse.ok) continue;
+            const userData = await userResponse.json();
+            if (!userData.data) continue;
+            
+            const userId = userData.data.id;
+            
+            // Get recent tweets
+            const tweetsResponse = await fetch(
+                `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,public_metrics&exclude=retweets,replies`,
+                {
+                    headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` }
+                }
+            );
+            
+            if (!tweetsResponse.ok) continue;
+            const tweetsData = await tweetsResponse.json();
+            
+            if (tweetsData.data) {
+                for (const tweet of tweetsData.data) {
+                    // Skip if not news-like content
+                    if (!isNewsContent(tweet.text)) continue;
+                    
+                    // Skip very short tweets (likely not news)
+                    if (tweet.text.length < 50) continue;
+                    
+                    // Create headline from tweet (first 150 chars or first sentence)
+                    let headline = tweet.text.split('\n')[0];
+                    if (headline.length > 150) {
+                        headline = headline.substring(0, 147) + '...';
+                    }
+                    
+                    stories.push({
+                        headline: `${account.name.toUpperCase()}: ${headline}`,
+                        url: `https://x.com/${account.handle}/status/${tweet.id}`,
+                        source: account.name,
+                        pubDate: tweet.created_at,
+                        type: 'tweet',
+                        engagement: tweet.public_metrics ? 
+                            (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2) : 0,
+                        sourceWeight: account.weight
+                    });
+                }
+            }
+            
+            // Rate limiting - small delay between requests
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+        } catch (error) {
+            console.error(`Error fetching X posts for ${account.handle}:`, error.message);
+        }
     }
     
-    // Source weight (40%)
-    const sourceWeight = story.sourceWeight || 0.5;
-    const sourceScore = sourceWeight * 40;
-    
-    // Content type bonus (20%)
-    const contentBonus = story.hasVideo ? 20 : story.hasImage ? 15 : 10;
-    
-    return recencyScore + sourceScore + contentBonus;
+    return stories;
 }
 
-// Fetch RSS feeds
+// Fetch RSS feeds (articles and videos)
 async function fetchRSSFeeds() {
     const stories = [];
     
@@ -126,17 +165,22 @@ async function fetchRSSFeeds() {
             const parsed = await parser.parseURL(feed.url);
             
             for (const item of parsed.items.slice(0, 5)) {
+                // Skip non-news content
+                if (!isNewsContent(item.title)) continue;
+                
+                // Skip corporate media links
                 if (isCorporateMedia(item.link)) continue;
                 
+                const headline = formatHeadline(feed.name, item.title);
+                
                 stories.push({
-                    headline: item.title,
+                    headline: headline,
                     url: item.link,
                     source: feed.name,
                     pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
                     excerpt: item.contentSnippet?.slice(0, 200) || '',
-                    imageUrl: item.enclosure?.url || extractImageFromContent(item.content) || getYouTubeThumbnail(item.link),
-                    hasVideo: feed.url.includes('youtube.com') || feed.url.includes('rumble.com'),
-                    hasImage: true,
+                    imageUrl: getImageUrl(item, feed),
+                    type: feed.type,
                     sourceWeight: feed.weight
                 });
             }
@@ -148,31 +192,65 @@ async function fetchRSSFeeds() {
     return stories;
 }
 
-// Get YouTube thumbnail from URL
-function getYouTubeThumbnail(url) {
-    if (!url) return null;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-    if (match) {
-        return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+// Get image URL from feed item
+function getImageUrl(item, feed) {
+    if (item.enclosure?.url) return item.enclosure.url;
+    
+    // YouTube thumbnail
+    if (feed.url.includes('youtube.com') && item.link) {
+        const match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+        if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
     }
+    
+    // Extract from content
+    if (item.content) {
+        const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+        if (imgMatch) return imgMatch[1];
+    }
+    
     return null;
-}
-
-// Extract image from content
-function extractImageFromContent(content) {
-    if (!content) return null;
-    const match = content.match(/<img[^>]+src="([^">]+)"/);
-    return match ? match[1] : null;
 }
 
 // Format headline with source name
 function formatHeadline(source, headline) {
     const sourceName = source.toUpperCase();
     const firstName = sourceName.split(' ')[0];
-    if (headline.toUpperCase().startsWith(firstName)) {
+    if (headline.toUpperCase().startsWith(firstName) || headline.toUpperCase().startsWith(sourceName)) {
         return headline;
     }
     return `${sourceName}: ${headline}`;
+}
+
+// Calculate story score
+function calculateScore(story) {
+    const now = Date.now();
+    const storyDate = new Date(story.pubDate).getTime();
+    const ageHours = (now - storyDate) / (1000 * 60 * 60);
+    
+    // Recency score (50%) - news is time-sensitive
+    let recencyScore = 0;
+    if (ageHours < 3) {
+        recencyScore = 50;
+    } else if (ageHours < 6) {
+        recencyScore = 45;
+    } else if (ageHours < 12) {
+        recencyScore = 35;
+    } else if (ageHours < 24) {
+        recencyScore = 20;
+    } else {
+        recencyScore = Math.max(0, 10 - (ageHours / 12));
+    }
+    
+    // Source weight (30%)
+    const sourceScore = (story.sourceWeight || 0.5) * 30;
+    
+    // Engagement boost for tweets (20%)
+    let engagementScore = 10;
+    if (story.type === 'tweet' && story.engagement) {
+        engagementScore = Math.min(20, 10 + Math.log10(story.engagement + 1) * 3);
+    }
+    
+    return recencyScore + sourceScore + engagementScore;
 }
 
 // Refresh stories
@@ -180,13 +258,21 @@ async function refreshStories() {
     console.log('Refreshing stories...');
     
     try {
-        const rssStories = await fetchRSSFeeds();
+        // Fetch from both sources
+        const [xPosts, rssStories] = await Promise.all([
+            fetchXPosts(),
+            fetchRSSFeeds()
+        ]);
+        
+        console.log(`Fetched ${xPosts.length} X posts, ${rssStories.length} RSS items`);
+        
+        // Combine all stories
+        const allStories = [...xPosts, ...rssStories];
         
         // Score stories
-        const scored = rssStories.map(story => ({
+        const scored = allStories.map(story => ({
             ...story,
-            score: calculateScore(story),
-            headline: formatHeadline(story.source, story.headline)
+            score: calculateScore(story)
         }));
 
         // Sort by score
@@ -225,20 +311,10 @@ app.get('/api/top10', (req, res) => {
         headline: story.headline,
         url: story.url,
         source: story.source,
-        hot: story.score > 60,
-        imageUrl: story.imageUrl
+        hot: index < 3
     }));
     
     res.json({ top10, lastUpdated: lastFetch });
-});
-
-app.get('/api/breaking', (req, res) => {
-    const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000);
-    const breaking = cachedStories.filter(s => 
-        new Date(s.pubDate).getTime() > sixHoursAgo
-    ).slice(0, 5);
-    
-    res.json({ breaking, lastUpdated: lastFetch });
 });
 
 app.get('/api/health', (req, res) => {
@@ -267,5 +343,5 @@ refreshStories().then(() => {
     });
 });
 
-// Refresh every 30 minutes
-setInterval(refreshStories, 30 * 60 * 1000);
+// Refresh every 15 minutes (news moves fast)
+setInterval(refreshStories, 15 * 60 * 1000);
