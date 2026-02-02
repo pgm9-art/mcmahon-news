@@ -15,116 +15,277 @@ app.use(express.static(path.join(__dirname)));
 // X Bearer Token
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-// Source metadata with colors and branding
-const SOURCE_META = {
-        'Tucker Carlson': { color: '#dc2626', logo: 'TC', category: 'video', bias: 'right' },
-        'Glenn Greenwald': { color: '#16a34a', logo: 'GG', category: 'journalist', bias: 'independent' },
-        'Nick Fuentes': { color: '#7c3aed', logo: 'NF', category: 'commentary', bias: 'right' },
-        'Judge Napolitano': { color: '#0369a1', logo: 'JN', category: 'video', bias: 'libertarian' },
-        'Dave Smith': { color: '#ca8a04', logo: 'DS', category: 'podcast', bias: 'libertarian' },
-        'Breaking Points': { color: '#ea580c', logo: 'BP', category: 'video', bias: 'independent' },
-        'Krystal Ball': { color: '#db2777', logo: 'KB', category: 'video', bias: 'left' },
-        'Saagar Enjeti': { color: '#0891b2', logo: 'SE', category: 'video', bias: 'right' },
-        'Drop Site News': { color: '#059669', logo: 'DS', category: 'investigative', bias: 'left' },
-        'Candace Owens': { color: '#be185d', logo: 'CO', category: 'commentary', bias: 'right' },
-        'Steve Bannon': { color: '#b91c1c', logo: 'SB', category: 'podcast', bias: 'right' },
-        'Col. Macgregor': { color: '#365314', logo: 'CM', category: 'analysis', bias: 'independent' },
-        'Jeffrey Sachs': { color: '#1e40af', logo: 'JS', category: 'analysis', bias: 'left' },
-        'Redacted': { color: '#7c2d12', logo: 'RD', category: 'video', bias: 'independent' },
-        'Matt Taibbi': { color: '#4338ca', logo: 'MT', category: 'journalist', bias: 'independent' },
-        'Max Blumenthal': { color: '#166534', logo: 'MB', category: 'journalist', bias: 'left' },
-        'Scott Ritter': { color: '#1e3a8a', logo: 'SR', category: 'analysis', bias: 'independent' },
-        'The Grayzone': { color: '#065f46', logo: 'GZ', category: 'investigative', bias: 'left' },
-        'Seymour Hersh': { color: '#78350f', logo: 'SH', category: 'investigative', bias: 'independent' },
-        'Citizen Free Press': { color: '#dc2626', logo: 'CFP', category: 'aggregator', bias: 'right' },
-        'Reason': { color: '#f59e0b', logo: 'R', category: 'magazine', bias: 'libertarian' },
-        'The Young Turks': { color: '#2563eb', logo: 'TYT', category: 'video', bias: 'left' }
-};
-
 // X accounts to monitor (primary news source)
 const X_ACCOUNTS = [
-    { handle: 'TuckerCarlson', name: 'Tucker Carlson', weight: 1.0 },
-    { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
-    { handle: 'NickJFuentes', name: 'Nick Fuentes', weight: 1.0 },
-    { handle: 'Judgenap', name: 'Judge Napolitano', weight: 1.0 },
-    { handle: 'ComicDaveSmith', name: 'Dave Smith', weight: 0.9 },
-    { handle: 'BreakingPoints', name: 'Breaking Points', weight: 1.0 },
-    { handle: 'KrsytalBall', name: 'Krystal Ball', weight: 0.9 },
-    { handle: 'esikilar', name: 'Saagar Enjeti', weight: 0.9 },
-    { handle: 'DropsiteNews', name: 'Drop Site News', weight: 1.0 },
-    { handle: 'RealCandaceO', name: 'Candace Owens', weight: 0.8 },
-    { handle: 'WarRoomPandemic', name: 'Steve Bannon', weight: 0.8 },
-    { handle: 'Douglasmacgregor', name: 'Col. Macgregor', weight: 0.8 },
-    { handle: 'JeffreySachs', name: 'Jeffrey Sachs', weight: 0.8 },
-    { handle: 'RedactedNews', name: 'Redacted', weight: 0.8 },
-    { handle: 'mtaibbi', name: 'Matt Taibbi', weight: 0.5 },
-    { handle: 'MaxBlumenthal', name: 'Max Blumenthal', weight: 0.7 },
-    { handle: 'ScottRitter', name: 'Scott Ritter', weight: 0.7 },
-    { handle: 'TheGrayzoneNews', name: 'The Grayzone', weight: 0.8 },
-    { handle: 'seabornehersh', name: 'Seymour Hersh', weight: 0.9 },
-    { handle: 'CitizenFreePres', name: 'Citizen Free Press', weight: 0.9 },
-    { handle: 'reason', name: 'Reason', weight: 0.8 },
-    { handle: 'TheYoungTurks', name: 'The Young Turks', weight: 0.8 }
-    ];
+        { handle: 'TuckerCarlson', name: 'Tucker Carlson', weight: 1.0 },
+        { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
+        { handle: 'NickJFuentes', name: 'Nick Fuentes', weight: 1.0 },
+        { handle: 'Judgenap', name: 'Judge Napolitano', weight: 1.0 },
+        { handle: 'ComicDaveSmith', name: 'Dave Smith', weight: 0.9 },
+        { handle: 'BreakingPoints', name: 'Breaking Points', weight: 1.0 },
+        { handle: 'KrsytalBall', name: 'Krystal Ball', weight: 0.9 },
+        { handle: 'esikilar', name: 'Saagar Enjeti', weight: 0.9 },
+        { handle: 'DropsiteNews', name: 'Drop Site News', weight: 1.0 },
+        { handle: 'RealCandaceO', name: 'Candace Owens', weight: 0.8 },
+        { handle: 'WarRoomPandemic', name: 'Steve Bannon', weight: 0.8 },
+        { handle: 'Douglasmacgregor', name: 'Col. Macgregor', weight: 0.8 },
+        { handle: 'JeffreySachs', name: 'Jeffrey Sachs', weight: 0.8 },
+        { handle: 'RedactedNews', name: 'Redacted', weight: 0.8 },
+        { handle: 'mtaibbi', name: 'Matt Taibbi', weight: 0.5 },
+        { handle: 'MaxBlumenthal', name: 'Max Blumenthal', weight: 0.7 },
+        { handle: 'ScottRitter', name: 'Scott Ritter', weight: 0.7 }
+        ];
 
 // RSS feeds for articles/videos (secondary source - filtered for news)
 const RSS_FEEDS = [
-    { name: 'Glenn Greenwald', url: 'https://greenwald.substack.com/feed', weight: 1.0, type: 'article' },
-    { name: 'Drop Site News', url:const express = require('express');
-const cors = require('cors');
-const RSSParser = require('rss-parser');
-const path = require('path');
-require('dotenv').config();
+        { name: 'Glenn Greenwald', url: 'https://greenwald.substack.com/feed', weight: 1.0, type: 'article' },
+        { name: 'Drop Site News', url: 'https://www.dropsitenews.com/feed', weight: 1.0, type: 'article' },
+        { name: 'The Grayzone', url: 'https://thegrayzone.com/feed/', weight: 0.8, type: 'article' },
+        { name: 'Matt Taibbi', url: 'https://www.racket.news/feed', weight: 0.5, type: 'article' },
+        { name: 'Seymour Hersh', url: 'https://seymourhersh.substack.com/feed', weight: 0.7, type: 'article' },
+        { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsox8LQ1disc39gKMO7SBDg', weight: 1.0, type: 'video' },
+        { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC7MpzwYC_T_V1HvxSWu9f0g', weight: 1.0, type: 'video' },
+        { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCULvqbr5KVJqa5cMGvfgx7A', weight: 1.0, type: 'video' },
+        { name: 'Redacted', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCR-dJMi0d8BXxj5PTGCP12Q', weight: 0.8, type: 'video' }
+        ];
 
-const app = express();
-const parser = new RSSParser();
-const PORT = process.env.PORT || 3000;
+// Words that indicate NON-news content (filter these out)
+const NON_NEWS_FILTERS = [
+            'episode', 'ep.', 'ep ', '#', 'podcast', 'full show', 'full episode',
+            'compilation', 'best of', 'highlights', 'preview', 'trailer',
+            'subscribe', 'join us', 'live stream starting', 'going live'
+        ];
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+// Corporate media blacklist
+const CORPORATE_BLACKLIST = [
+            'nytimes.com', 'washingtonpost.com', 'cnn.com', 'foxnews.com', 'msnbc.com',
+            'nbcnews.com', 'abcnews.go.com', 'cbsnews.com', 'wsj.com', 'usatoday.com',
+            'reuters.com', 'apnews.com', 'bbc.com', 'theguardian.com', 'politico.com',
+            'thehill.com', 'axios.com', 'huffpost.com', 'vox.com', 'vice.com',
+            'buzzfeed.com', 'dailybeast.com', 'slate.com', 'salon.com', 'motherjones.com',
+            'forbes.com', 'bloomberg.com', 'businessinsider.com', 'cnbc.com'
+        ];
 
-// X Bearer Token
-const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
+// In-memory cache
+let cachedStories = [];
+let lastFetch = null;
 
-// Source metadata with colors and branding
-const SOURCE_META = {
-        'Tucker Carlson': { color: '#dc2626', logo: 'TC', category: 'video', bias: 'right' },
-        'Glenn Greenwald': { color: '#16a34a', logo: 'GG', category: 'journalist', bias: 'independent' },
-        'Nick Fuentes': { color: '#7c3aed', logo: 'NF', category: 'commentary', bias: 'right' },
-        'Judge Napolitano': { color: '#0369a1', logo: 'JN', category: 'video', bias: 'libertarian' },
-        'Dave Smith': { color: '#ca8a04', logo: 'DS', category: 'podcast', bias: 'libertarian' },
-        'Breaking Points': { color: '#ea580c', logo: 'BP', category: 'video', bias: 'independent' },
-        'Krystal Ball': { color: '#db2777', logo: 'KB', category: 'video', bias: 'left' },
-        'Saagar Enjeti': { color: '#0891b2', logo: 'SE', category: 'video', bias: 'right' },
-        'Drop Site News': { color: '#059669', logo: 'DS', category: 'investigative', bias: 'left' },
-        'Candace Owens': { color: '#be185d', logo: 'CO', category: 'commentary', bias: 'right' },
-        'Steve Bannon': { color: '#b91c1c', logo: 'SB', category: 'podcast', bias: 'right' },
-        'Col. Macgregor': { color: '#365314', logo: 'CM', category: 'analysis', bias: 'independent' },
-        'Jeffrey Sachs': { color: '#1e40af', logo: 'JS', category: 'analysis', bias: 'left' },
-        'Redacted': { color: '#7c2d12', logo: 'RD', category: 'video', bias: 'independent' },
-        'Matt Taibbi': { color: '#4338ca', logo: 'MT', category: 'journalist', bias: 'independent' },
-        'Max Blumenthal': { color: '#166534', logo: 'MB', category: 'journalist', bias: 'left' },
-        'Scott Ritter': { color: '#1e3a8a', logo: 'SR', category: 'analysis', bias: 'independent' },
-        'The Grayzone': { color: '#065f46', logo: 'GZ', category: 'investigative', bias: 'left' },
-        'Seymour Hersh': { color: '#78350f', logo: 'SH', category: 'investigative', bias: 'independent' },
-        'Citizen Free Press': { color: '#dc2626', logo: 'CFP', category: 'aggregator', bias: 'right' },
-        'Reason': { color: '#f59e0b', logo: 'R', category: 'magazine', bias: 'libertarian' },
-        'The Young Turks': { color: '#2563eb', logo: 'TYT', category: 'video', bias: 'left' }
-};
+// Check if headline is actual news (not podcast episode)
+function isNewsContent(headline) {
+            const lower = headline.toLowerCase();
+            return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
+}
 
-// X accounts to monitor (primary news source)
-const X_ACCOUNTS = [
-    { handle: 'TuckerCarlson', name: 'Tucker Carlson', weight: 1.0 },
-    { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
-    { handle: 'NickJFuentes', name: 'Nick Fuentes', weight: 1.0 },
-    { handle: 'Judgenap', name: 'Judge Napolitano', weight: 1.0 },
-    { handle: 'ComicDaveSmith', name: 'Dave Smith', weight: 0.9 },
-    { handle: 'BreakingPoints', name: 'Breaking Points', weight: 1.0 },
-    { handle: 'KrsytalBall', name: 'Krystal Ball', weight: 0.9 },
-    { handle: 'esikilar', name: 'Saagar Enjeti', weight: 0.9 },
-    { handle: 'DropsiteNews', name: 'Drop Site News', weight: 1.0 },
-    { handle: 'RealCandaceO', name: 'Candace Owens', weight: 0.8 },
-    { handle: 'WarRoomPandemic', name: 'Steve Bannon', weight: 0.8 },
-    { handle: 'Douglasmacgregor', name: 'Col. Macgregor', weight: 0.8 },
-    { handle: 'JeffreySachs', name: '
+// Check if URL is from corporate media
+function isCorporateMedia(url) {
+            if (!url) return false;
+            return CORPORATE_BLACKLIST.some(domain => url.toLowerCase().includes(domain));
+}
+
+// Fetch tweets from X API
+async function fetchXPosts() {
+            if (!X_BEARER_TOKEN) {
+                            console.log('No X Bearer Token - skipping X API');
+                            return [];
+            }
+
+    const stories = [];
+
+    for (const account of X_ACCOUNTS) {
+                    try {
+                                        const userResponse = await fetch(
+                                                                `https://api.twitter.com/2/users/by/username/${account.handle}`,
+                                                { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
+                                                            );
+
+                        if (!userResponse.ok) continue;
+
+                        const userData = await userResponse.json();
+                                        if (!userData.data) continue;
+
+                        const userId = userData.data.id;
+
+                        const tweetsResponse = await fetch(
+                                                `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,public_metrics&exclude=retweets,replies`,
+                                { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
+                                            );
+
+                        if (!tweetsResponse.ok) continue;
+
+                        const tweetsData = await tweetsResponse.json();
+
+                        if (tweetsData.data) {
+                                                for (const tweet of tweetsData.data) {
+                                                                            if (!isNewsContent(tweet.text)) continue;
+                                                                            if (tweet.text.length < 50) continue;
+
+                                                    let headline = tweet.text.split('\n')[0];
+                                                                            if (headline.length > 150) {
+                                                                                                            headline = headline.substring(0, 147) + '...';
+                                                                                    }
+
+                                                    stories.push({
+                                                                                    headline: `${account.name.toUpperCase()}: ${headline}`,
+                                                                                    url: `https://x.com/${account.handle}/status/${tweet.id}`,
+                                                                                    source: account.name,
+                                                                                    pubDate: tweet.created_at,
+                                                                                    type: 'tweet',
+                                                                                    engagement: tweet.public_metrics ? (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2) : 0,
+                                                                                    sourceWeight: account.weight
+                                                    });
+                                                }
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 100));
+
+                    } catch (error) {
+                                        console.error(`Error fetching X posts for ${account.handle}:`, error.message);
+                    }
+    }
+
+    return stories;
+}
+
+// Fetch RSS feeds (articles and videos)
+async function fetchRSSFeeds() {
+            const stories = [];
+
+    for (const feed of RSS_FEEDS) {
+                    try {
+                                        const parsed = await parser.parseURL(feed.url);
+
+                        for (const item of parsed.items.slice(0, 5)) {
+                                                if (!isNewsContent(item.title)) continue;
+                                                if (isCorporateMedia(item.link)) continue;
+
+                                            const headline = formatHeadline(feed.name, item.title);
+
+                                            stories.push({
+                                                                        headline: headline,
+                                                                        url: item.link,
+                                                                        source: feed.name,
+                                                                        pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+                                                                        excerpt: item.contentSnippet?.slice(0, 200) || '',
+                                                                        imageUrl: getImageUrl(item, feed),
+                                                                        type: feed.type,
+                                                                        sourceWeight: feed.weight
+                                            });
+                        }
+                    } catch (error) {
+                                        console.error(`Error fetching ${feed.name}:`, error.message);
+                    }
+    }
+
+    return stories;
+}
+
+function getImageUrl(item, feed) {
+            if (item.enclosure?.url) return item.enclosure.url;
+
+    if (feed.url.includes('youtube.com') && item.link) {
+                    const match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+                    if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+    }
+
+    if (item.content) {
+                    const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+                    if (imgMatch) return imgMatch[1];
+    }
+
+    return null;
+}
+
+function formatHeadline(source, headline) {
+            const sourceName = source.toUpperCase();
+            const firstName = sourceName.split(' ')[0];
+
+    if (headline.toUpperCase().startsWith(firstName) || headline.toUpperCase().startsWith(sourceName)) {
+                    return headline;
+    }
+
+    return `${sourceName}: ${headline}`;
+}
+
+function calculateScore(story) {
+            const now = Date.now();
+            const storyDate = new Date(story.pubDate).getTime();
+            const ageHours = (now - storyDate) / (1000 * 60 * 60);
+
+    let recencyScore = 0;
+            if (ageHours < 3) recencyScore = 50;
+            else if (ageHours < 6) recencyScore = 45;
+            else if (ageHours < 12) recencyScore = 35;
+            else if (ageHours < 24) recencyScore = 20;
+            else recencyScore = Math.max(0, 10 - (ageHours / 12));
+
+    const sourceScore = (story.sourceWeight || 0.5) * 30;
+
+    let engagementScore = 10;
+            if (story.type === 'tweet' && story.engagement) {
+                            engagementScore = Math.min(20, 10 + Math.log10(story.engagement + 1) * 3);
+            }
+
+    return recencyScore + sourceScore + engagementScore;
+}
+
+async function refreshStories() {
+            console.log('Refreshing stories...');
+
+    try {
+                    const [xPosts, rssStories] = await Promise.all([fetchXPosts(), fetchRSSFeeds()]);
+
+                console.log(`Fetched ${xPosts.length} X posts, ${rssStories.length} RSS items`);
+
+                const allStories = [...xPosts, ...rssStories];
+
+                const scored = allStories.map(story => ({ ...story, score: calculateScore(story) }));
+
+                scored.sort((a, b) => b.score - a.score);
+
+                const sourceCounts = {};
+                    const diverseStories = scored.filter(story => {
+                                        const source = story.source.toLowerCase();
+                                        sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+                                        return sourceCounts[source] <= 3;
+                    });
+
+                cachedStories = diverseStories;
+                    lastFetch = new Date();
+
+                console.log(`Cached ${cachedStories.length} stories from ${Object.keys(sourceCounts).length} sources`);
+
+    } catch (error) {
+                    console.error('Error refreshing stories:', error);
+    }
+}
+
+app.get('/api/stories', (req, res) => {
+            const limit = parseInt(req.query.limit) || 50;
+            res.json({ stories: cachedStories.slice(0, limit), lastUpdated: lastFetch, count: cachedStories.length });
+});
+
+app.get('/api/top10', (req, res) => {
+            const top10 = cachedStories.slice(0, 10).map((story, index) => ({
+                            rank: index + 1, headline: story.headline, url: story.url, source: story.source, hot: index < 3
+            }));
+            res.json({ top10, lastUpdated: lastFetch });
+});
+
+app.get('/api/health', (req, res) => {
+            res.json({ status: 'ok', stories: cachedStories.length, lastFetch: lastFetch, uptime: process.uptime() });
+});
+
+app.get('/api/refresh', async (req, res) => {
+            await refreshStories();
+            res.json({ success: true, count: cachedStories.length });
+});
+
+app.get('/', (req, res) => {
+            res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+refreshStories().then(() => {
+            app.listen(PORT, () => { console.log(`McMahon.News server running on port ${PORT}`); });
+});
+
+setInterval(refreshStories, 15 * 60 * 1000);
