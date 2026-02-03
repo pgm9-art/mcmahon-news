@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>McMahon.News — Top 15 Independent News Stories</title>
-    <meta name="description" content="McMahon.News delivers the Top 15 news stories of the day from independent journalists. 100% independent, zero corporate media.">
+    <title>McMahon.News — Independent News Aggregator</title>
+    <meta name="description" content="McMahon.News aggregates independent journalists in one place. 100% independent, zero corporate media.">
     <meta property="og:title" content="McMahon.News — Independent News">
     <meta property="og:description" content="100% Independent. Zero Corporate Media.">
     <link rel="canonical" href="https://mcmahon.news">
@@ -15,104 +15,227 @@
         body { font-family: Arial, Helvetica, sans-serif; background: #ffffff; color: #000000; line-height: 1.4; }
         a { color: #000000; text-decoration: none; }
         a:hover { color: #cc0000; }
+        
         .top-banner { background: #cc0000; color: white; padding: 8px 20px; text-align: center; font-size: 0.75rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        
         header { background: #ffffff; border-bottom: 2px solid #000000; padding: 20px; text-align: center; }
         .logo { font-family: Georgia, serif; font-size: 3rem; font-weight: normal; letter-spacing: -1px; }
         .logo-name { color: #000000; }
         .logo-dot { color: #cc0000; }
         .header-meta { margin-top: 8px; font-size: 0.8rem; color: #666666; }
-        .main-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        /* Lead Story */
-        .lead-story { text-align: center; padding: 25px 0; border-bottom: 1px solid #cccccc; }
-        .lead-source { display: inline-block; background: #cc0000; color: white; padding: 5px 15px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .lead-source:hover { background: #aa0000; }
-        .lead-headline { font-size: 1.8rem; font-weight: bold; line-height: 1.2; margin-bottom: 8px; }
-        .lead-headline a:hover { color: #cc0000; }
-        .lead-type { font-size: 0.65rem; color: #666666; text-transform: uppercase; letter-spacing: 1px; }
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
-        /* Top 15 Section */
-        .top15-section { padding: 20px 0; border-bottom: 1px solid #cccccc; }
-        .section-title { font-size: 1rem; color: #cc0000; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; text-align: center; }
-        .top15-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 25px; }
-        .top15-item { display: flex; align-items: flex-start; padding: 10px 0; border-bottom: 1px dotted #dddddd; }
-        .top15-rank { font-size: 1.1rem; font-weight: bold; color: #cc0000; min-width: 28px; padding-top: 2px; }
-        .top15-content { flex: 1; }
-        .top15-source { display: inline-block; background: #cc0000; color: white; padding: 2px 8px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .top15-source:hover { background: #aa0000; }
-        .top15-headline { font-size: 0.85rem; font-weight: bold; line-height: 1.3; }
-        .top15-headline a:hover { color: #cc0000; }
-        .top15-type { font-size: 0.6rem; color: #999999; text-transform: uppercase; margin-top: 3px; }
-        .top15-item.hot .top15-rank { color: #cc0000; font-size: 1.3rem; }
+        /* Section Headers */
+        .section-header { 
+            font-size: 0.85rem; 
+            color: #cc0000; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: bold; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+            border-bottom: 2px solid #cc0000; 
+        }
         
-        /* Three Columns */
-        .columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; padding: 20px 0; }
-        .column { border-right: 1px solid #eeeeee; padding-right: 20px; }
-        .column:last-child { border-right: none; padding-right: 0; }
-        .column-header { font-size: 0.75rem; color: #cc0000; text-transform: uppercase; letter-spacing: 2px; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 2px solid #cc0000; font-weight: bold; }
+        /* === VIDEO SECTION (TOP) === */
+        .video-section { 
+            padding: 20px 0; 
+            border-bottom: 2px solid #000000; 
+        }
+        .video-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; 
+        }
+        .video-card { 
+            background: #f9f9f9; 
+            border: 1px solid #ddd; 
+            overflow: hidden; 
+        }
+        .video-card:hover { 
+            border-color: #cc0000; 
+        }
+        .video-thumb { 
+            width: 100%; 
+            height: auto; 
+            display: block; 
+            aspect-ratio: 16/9; 
+            object-fit: cover; 
+            background: #eee; 
+        }
+        .video-info { 
+            padding: 10px; 
+        }
+        .video-source { 
+            display: inline-block; 
+            background: #cc0000; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 0.65rem; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            margin-bottom: 6px; 
+        }
+        .video-source:hover { 
+            background: #aa0000; 
+        }
+        .video-title { 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            line-height: 1.3; 
+        }
+        .video-title a:hover { 
+            color: #cc0000; 
+        }
         
-        .headline-item { padding: 12px 0; border-bottom: 1px dotted #dddddd; }
-        .headline-item:last-child { border-bottom: none; }
-        .headline-source { display: inline-block; background: #cc0000; color: white; padding: 2px 8px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .headline-source:hover { background: #aa0000; }
-        .headline-text { font-size: 0.9rem; font-weight: bold; line-height: 1.3; }
-        .headline-text a:hover { color: #cc0000; }
-        .headline-type { font-size: 0.6rem; color: #999999; text-transform: uppercase; margin-top: 4px; }
+        /* === X POSTS SECTION (MIDDLE - TWO COLUMNS) === */
+        .xposts-section { 
+            padding: 20px 0; 
+            border-bottom: 2px solid #000000; 
+        }
+        .xposts-columns { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 40px; 
+        }
+        .xposts-column { }
+        .xpost-item { 
+            padding: 12px 0; 
+            border-bottom: 1px dotted #dddddd; 
+        }
+        .xpost-item:last-child { 
+            border-bottom: none; 
+        }
+        .xpost-source { 
+            display: inline-block; 
+            background: #cc0000; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 0.65rem; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            margin-bottom: 6px; 
+        }
+        .xpost-source:hover { 
+            background: #aa0000; 
+        }
+        .xpost-text { 
+            font-size: 0.9rem; 
+            font-weight: bold; 
+            line-height: 1.3; 
+        }
+        .xpost-text a:hover { 
+            color: #cc0000; 
+        }
         
-        /* Video thumbnail styling */
-        .video-thumb { width: 100%; height: auto; margin-bottom: 8px; border: 1px solid #ddd; }
+        /* === ARTICLES SECTION (BOTTOM) === */
+        .articles-section { 
+            padding: 20px 0; 
+        }
+        .articles-list { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px 40px; 
+        }
+        .article-item { 
+            padding: 10px 0; 
+            border-bottom: 1px dotted #dddddd; 
+        }
+        .article-source { 
+            display: inline-block; 
+            background: #cc0000; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 0.65rem; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            margin-bottom: 6px; 
+        }
+        .article-source:hover { 
+            background: #aa0000; 
+        }
+        .article-title { 
+            font-size: 0.9rem; 
+            font-weight: bold; 
+            line-height: 1.3; 
+        }
+        .article-title a:hover { 
+            color: #cc0000; 
+        }
         
-        footer { background: #f5f5f5; border-top: 2px solid #000000; padding: 20px; text-align: center; margin-top: 30px; }
-        .footer-tagline { font-family: Georgia, serif; font-size: 1rem; font-style: italic; color: #333333; margin-bottom: 10px; }
-        .footer-copy { font-size: 0.7rem; color: #999999; }
+        footer { 
+            background: #f5f5f5; 
+            border-top: 2px solid #000000; 
+            padding: 20px; 
+            text-align: center; 
+            margin-top: 30px; 
+        }
+        .footer-tagline { 
+            font-family: Georgia, serif; 
+            font-size: 1rem; 
+            font-style: italic; 
+            color: #333333; 
+            margin-bottom: 10px; 
+        }
+        .footer-copy { 
+            font-size: 0.7rem; 
+            color: #999999; 
+        }
         
-        @media (max-width: 900px) {
-            .top15-grid { grid-template-columns: repeat(2, 1fr); }
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .video-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
-            .columns { grid-template-columns: 1fr; gap: 0; }
-            .column { border-right: none; border-bottom: 1px solid #eeeeee; padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
-            .column:last-child { border-bottom: none; }
+            .video-grid { grid-template-columns: repeat(2, 1fr); }
+            .xposts-columns { grid-template-columns: 1fr; gap: 0; }
+            .articles-list { grid-template-columns: 1fr; }
             .logo { font-size: 2.2rem; }
-            .lead-headline { font-size: 1.4rem; }
-            .top15-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 500px) {
+            .video-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="top-banner">100% INDEPENDENT. ZERO CORPORATE MEDIA.</div>
+    
     <header>
         <a href="/" class="logo"><span class="logo-name">McMahon</span><span class="logo-dot">.NEWS</span></a>
         <div class="header-meta"><span id="current-date"></span> • <span id="last-updated"></span></div>
     </header>
     
     <main class="main-container">
-        <!-- Lead Story -->
-        <div class="lead-story" id="lead-story">
-            <a href="#" class="lead-source">LOADING...</a>
-            <h1 class="lead-headline"><a href="#">Loading top story...</a></h1>
-        </div>
         
-        <!-- Top 15 Trending -->
-        <div class="top15-section">
-            <div class="section-title">🔥 Top 15 Right Now</div>
-            <div class="top15-grid" id="top15-grid">
+        <!-- VIDEO SECTION (TOP) -->
+        <section class="video-section">
+            <div class="section-header">📺 Latest Videos</div>
+            <div class="video-grid" id="video-grid">
                 <!-- Populated by JS -->
             </div>
-        </div>
+        </section>
         
-        <!-- Three Columns: X Posts, Videos, Articles -->
-        <div class="columns">
-            <div class="column" id="column-xposts">
-                <div class="column-header">X Posts</div>
+        <!-- X POSTS SECTION (MIDDLE) -->
+        <section class="xposts-section">
+            <div class="section-header">𝕏 Posts</div>
+            <div class="xposts-columns">
+                <div class="xposts-column" id="xposts-left"></div>
+                <div class="xposts-column" id="xposts-right"></div>
             </div>
-            <div class="column" id="column-videos">
-                <div class="column-header">Videos</div>
+        </section>
+        
+        <!-- ARTICLES SECTION (BOTTOM) -->
+        <section class="articles-section">
+            <div class="section-header">📰 Articles</div>
+            <div class="articles-list" id="articles-list">
+                <!-- Populated by JS -->
             </div>
-            <div class="column" id="column-articles">
-                <div class="column-header">Articles</div>
-            </div>
-        </div>
+        </section>
+        
     </main>
     
     <footer>
@@ -131,99 +254,87 @@
             });
         }
         
-        function getTypeLabel(type) {
-            if (type === 'tweet') return 'X POST';
-            if (type === 'video') return 'VIDEO';
-            if (type === 'article') return 'ARTICLE';
-            return type.toUpperCase();
-        }
-        
-        function renderLeadStory(story) {
-            document.getElementById('lead-story').innerHTML = `
-                <a href="${story.url}" target="_blank" class="lead-source">${story.source}</a>
-                <h1 class="lead-headline"><a href="${story.url}" target="_blank">${story.headline}</a></h1>
-                <div class="lead-type">${getTypeLabel(story.type)}</div>
-            `;
-        }
-        
-        function renderTop15(stories) {
-            const container = document.getElementById('top15-grid');
+        function renderVideos(videos) {
+            const container = document.getElementById('video-grid');
             let html = '';
-            stories.forEach((story, index) => {
-                const isHot = index < 3 ? 'hot' : '';
+            
+            videos.forEach(video => {
+                const thumb = video.imageUrl || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect fill="%23ccc" width="16" height="9"/><text x="8" y="5" text-anchor="middle" fill="%23999" font-size="2">No Image</text></svg>';
                 html += `
-                    <div class="top15-item ${isHot}">
-                        <div class="top15-rank">${index + 1}</div>
-                        <div class="top15-content">
-                            <a href="${story.url}" target="_blank" class="top15-source">${story.source}</a>
-                            <div class="top15-headline"><a href="${story.url}" target="_blank">${story.headline}</a></div>
-                            <div class="top15-type">${getTypeLabel(story.type)}</div>
+                    <div class="video-card">
+                        <a href="${video.url}" target="_blank">
+                            <img src="${thumb}" alt="" class="video-thumb" loading="lazy">
+                        </a>
+                        <div class="video-info">
+                            <a href="${video.url}" target="_blank" class="video-source">${video.source}</a>
+                            <div class="video-title"><a href="${video.url}" target="_blank">${video.headline}</a></div>
                         </div>
                     </div>
                 `;
             });
+            
             container.innerHTML = html;
         }
         
-        function renderColumn(containerId, stories, headerText, showThumbnails = false) {
-            const container = document.getElementById(containerId);
-            let html = `<div class="column-header">${headerText}</div>`;
+        function renderXPosts(tweets) {
+            const leftCol = document.getElementById('xposts-left');
+            const rightCol = document.getElementById('xposts-right');
             
-            if (stories.length === 0) {
-                html += '<div class="headline-item"><div class="headline-text">No content available</div></div>';
-            } else {
-                stories.forEach((story) => {
-                    let thumbnail = '';
-                    if (showThumbnails && story.imageUrl) {
-                        thumbnail = `<a href="${story.url}" target="_blank"><img src="${story.imageUrl}" alt="" class="video-thumb" loading="lazy"></a>`;
-                    }
-                    html += `
-                        <div class="headline-item">
-                            ${thumbnail}
-                            <a href="${story.url}" target="_blank" class="headline-source">${story.source}</a>
-                            <div class="headline-text"><a href="${story.url}" target="_blank">${story.headline}</a></div>
-                            <div class="headline-type">${getTypeLabel(story.type)}</div>
-                        </div>
-                    `;
-                });
-            }
-            container.innerHTML = html;
+            const half = Math.ceil(tweets.length / 2);
+            const leftTweets = tweets.slice(0, half);
+            const rightTweets = tweets.slice(half);
+            
+            leftCol.innerHTML = leftTweets.map(tweet => `
+                <div class="xpost-item">
+                    <a href="${tweet.url}" target="_blank" class="xpost-source">${tweet.source}</a>
+                    <div class="xpost-text"><a href="${tweet.url}" target="_blank">${tweet.headline}</a></div>
+                </div>
+            `).join('');
+            
+            rightCol.innerHTML = rightTweets.map(tweet => `
+                <div class="xpost-item">
+                    <a href="${tweet.url}" target="_blank" class="xpost-source">${tweet.source}</a>
+                    <div class="xpost-text"><a href="${tweet.url}" target="_blank">${tweet.headline}</a></div>
+                </div>
+            `).join('');
+        }
+        
+        function renderArticles(articles) {
+            const container = document.getElementById('articles-list');
+            
+            container.innerHTML = articles.map(article => `
+                <div class="article-item">
+                    <a href="${article.url}" target="_blank" class="article-source">${article.source}</a>
+                    <div class="article-title"><a href="${article.url}" target="_blank">${article.headline}</a></div>
+                </div>
+            `).join('');
         }
         
         async function loadStories() {
             try {
-                // Fetch all sections in parallel
-                const [top15Res, tweetsRes, videosRes, articlesRes] = await Promise.all([
-                    fetch('/api/top15'),
-                    fetch('/api/tweets'),
+                const [videosRes, tweetsRes, articlesRes] = await Promise.all([
                     fetch('/api/videos'),
+                    fetch('/api/tweets'),
                     fetch('/api/articles')
                 ]);
                 
-                const top15Data = await top15Res.json();
-                const tweetsData = await tweetsRes.json();
                 const videosData = await videosRes.json();
+                const tweetsData = await tweetsRes.json();
                 const articlesData = await articlesRes.json();
                 
-                // Lead story + Top 15
-                if (top15Data.top15 && top15Data.top15.length > 0) {
-                    renderLeadStory(top15Data.top15[0]);
-                    renderTop15(top15Data.top15);
+                // Render videos (top section)
+                if (videosData.videos && videosData.videos.length > 0) {
+                    renderVideos(videosData.videos);
                 }
                 
-                // X Posts column
-                if (tweetsData.tweets) {
-                    renderColumn('column-xposts', tweetsData.tweets.slice(0, 15), 'X Posts');
+                // Render X posts (middle section)
+                if (tweetsData.tweets && tweetsData.tweets.length > 0) {
+                    renderXPosts(tweetsData.tweets);
                 }
                 
-                // Videos column (with thumbnails)
-                if (videosData.videos) {
-                    renderColumn('column-videos', videosData.videos.slice(0, 10), 'Videos', true);
-                }
-                
-                // Articles column
-                if (articlesData.articles) {
-                    renderColumn('column-articles', articlesData.articles.slice(0, 15), 'Articles');
+                // Render articles (bottom section)
+                if (articlesData.articles && articlesData.articles.length > 0) {
+                    renderArticles(articlesData.articles);
                 }
                 
             } catch (error) { 
