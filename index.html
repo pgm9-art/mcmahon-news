@@ -4,57 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McMahon.News — Independent News Aggregator</title>
-    <meta name="description" content="McMahon.News aggregates independent journalists in one place. 100% independent, zero corporate media.">
+    <meta name="description" content="McMahon.News aggregates independent journalists in one place. Videos and X posts from Tucker Carlson, Glenn Greenwald, Breaking Points, and more.">
     <meta property="og:title" content="McMahon.News — Independent News">
     <meta property="og:description" content="100% Independent. Zero Corporate Media.">
+    <meta property="og:image" content="https://mcmahon.news/og-image.png">
     <link rel="canonical" href="https://mcmahon.news">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Georgia&family=Arial:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Georgia&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; background: #ffffff; color: #000000; line-height: 1.4; }
-        a { color: #000000; text-decoration: none; }
-        a:hover { color: #cc0000; }
         
-        .top-banner { background: #cc0000; color: white; padding: 8px 20px; text-align: center; font-size: 0.75rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        :root {
+            --red: #cc0000;
+            --red-dark: #aa0000;
+            --red-light: #ff3333;
+            --black: #111111;
+            --white: #ffffff;
+            --gray-100: #f7f7f7;
+            --gray-200: #eeeeee;
+            --gray-300: #dddddd;
+            --gray-500: #888888;
+            --gray-700: #444444;
+        }
         
-        header { background: #ffffff; border-bottom: 2px solid #000000; padding: 20px; text-align: center; }
-        .logo { font-family: Georgia, serif; font-size: 3rem; font-weight: normal; letter-spacing: -1px; }
-        .logo-name { color: #000000; }
-        .logo-dot { color: #cc0000; }
-        .header-meta { margin-top: 8px; font-size: 0.8rem; color: #666666; }
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            background: var(--gray-100); 
+            color: var(--black); 
+            line-height: 1.4; 
+        }
         
-        .main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        a { color: var(--black); text-decoration: none; }
+        a:hover { color: var(--red); }
         
-        /* Section Headers */
+        /* === STICKY HEADER === */
+        .top-banner { 
+            background: var(--black); 
+            color: var(--white); 
+            padding: 10px 20px; 
+            text-align: center; 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+        }
+        .top-banner span { color: var(--red-light); }
+        
+        header { 
+            background: var(--white); 
+            border-bottom: 3px solid var(--red); 
+            padding: 15px 20px; 
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { 
+            font-family: Georgia, serif; 
+            font-size: 2.5rem; 
+            font-weight: normal; 
+            letter-spacing: -1px; 
+        }
+        .logo-name { color: var(--black); }
+        .logo-dot { color: var(--red); }
+        .header-meta { 
+            margin-top: 5px; 
+            font-size: 0.75rem; 
+            color: var(--gray-500); 
+            font-weight: 500;
+        }
+        
+        .main-container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 25px 20px; 
+        }
+        
+        /* === SECTION STYLING === */
+        .section { 
+            background: var(--white); 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
         .section-header { 
-            font-size: 0.85rem; 
-            color: #cc0000; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem; 
+            color: var(--black); 
             text-transform: uppercase; 
             letter-spacing: 2px; 
-            font-weight: bold; 
-            padding-bottom: 10px; 
-            margin-bottom: 15px; 
-            border-bottom: 2px solid #cc0000; 
+            font-weight: 700; 
+            padding-bottom: 15px; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid var(--gray-200); 
+        }
+        .section-header .icon {
+            font-size: 1.2rem;
+        }
+        .section-header .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
-        /* === VIDEO SECTION (TOP) === */
-        .video-section { 
-            padding: 20px 0; 
-            border-bottom: 2px solid #000000; 
-        }
+        /* === VIDEO SECTION === */
         .video-grid { 
             display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
+            grid-template-columns: repeat(3, 1fr); 
             gap: 20px; 
         }
         .video-card { 
-            background: #f9f9f9; 
-            border: 1px solid #ddd; 
-            overflow: hidden; 
+            background: var(--white); 
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
         .video-card:hover { 
-            border-color: #cc0000; 
+            border-color: var(--red);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .video-thumb-container {
+            position: relative;
+            overflow: hidden;
         }
         .video-thumb { 
             width: 100%; 
@@ -62,147 +146,169 @@
             display: block; 
             aspect-ratio: 16/9; 
             object-fit: cover; 
-            background: #eee; 
+            background: var(--gray-200);
+            transition: transform 0.3s ease;
+        }
+        .video-card:hover .video-thumb {
+            transform: scale(1.03);
+        }
+        .video-play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(204, 0, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .video-card:hover .video-play-btn {
+            opacity: 1;
+        }
+        .video-play-btn::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 18px solid white;
+            border-top: 11px solid transparent;
+            border-bottom: 11px solid transparent;
+            margin-left: 4px;
         }
         .video-info { 
-            padding: 10px; 
+            padding: 15px; 
         }
         .video-source { 
             display: inline-block; 
-            background: #cc0000; 
-            color: white; 
-            padding: 2px 8px; 
+            background: var(--red); 
+            color: var(--white); 
+            padding: 4px 10px; 
             font-size: 0.65rem; 
-            font-weight: bold; 
+            font-weight: 700; 
             text-transform: uppercase; 
             letter-spacing: 0.5px; 
-            margin-bottom: 6px; 
+            margin-bottom: 8px;
+            border-radius: 3px;
+            transition: background 0.2s ease;
         }
         .video-source:hover { 
-            background: #aa0000; 
+            background: var(--red-dark); 
         }
         .video-title { 
-            font-size: 0.85rem; 
-            font-weight: bold; 
-            line-height: 1.3; 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            line-height: 1.35;
+            color: var(--black);
         }
         .video-title a:hover { 
-            color: #cc0000; 
+            color: var(--red); 
+        }
+        .video-meta {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: var(--gray-500);
         }
         
-        /* === X POSTS SECTION (MIDDLE - TWO COLUMNS) === */
-        .xposts-section { 
-            padding: 20px 0; 
-            border-bottom: 2px solid #000000; 
-        }
-        .xposts-columns { 
+        /* === X POSTS SECTION === */
+        .xposts-grid { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 40px; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 0 40px; 
         }
-        .xposts-column { }
         .xpost-item { 
-            padding: 12px 0; 
-            border-bottom: 1px dotted #dddddd; 
+            padding: 15px 0; 
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
         }
         .xpost-item:last-child { 
             border-bottom: none; 
         }
         .xpost-source { 
             display: inline-block; 
-            background: #cc0000; 
-            color: white; 
-            padding: 2px 8px; 
+            background: var(--red); 
+            color: var(--white); 
+            padding: 4px 10px; 
             font-size: 0.65rem; 
-            font-weight: bold; 
+            font-weight: 700; 
             text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            margin-bottom: 6px; 
+            letter-spacing: 0.5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            transition: background 0.2s ease;
         }
         .xpost-source:hover { 
-            background: #aa0000; 
+            background: var(--red-dark); 
+        }
+        .xpost-content {
+            flex: 1;
         }
         .xpost-text { 
-            font-size: 0.9rem; 
-            font-weight: bold; 
-            line-height: 1.3; 
+            font-size: 0.95rem; 
+            font-weight: 500; 
+            line-height: 1.4;
+            color: var(--gray-700);
         }
         .xpost-text a:hover { 
-            color: #cc0000; 
+            color: var(--red); 
+        }
+        .xpost-meta {
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .trending-badge {
+            background: #ff6b00;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
         }
         
-        /* === ARTICLES SECTION (BOTTOM) === */
-        .articles-section { 
-            padding: 20px 0; 
-        }
-        .articles-list { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 15px 40px; 
-        }
-        .article-item { 
-            padding: 10px 0; 
-            border-bottom: 1px dotted #dddddd; 
-        }
-        .article-source { 
-            display: inline-block; 
-            background: #cc0000; 
-            color: white; 
-            padding: 2px 8px; 
-            font-size: 0.65rem; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            margin-bottom: 6px; 
-        }
-        .article-source:hover { 
-            background: #aa0000; 
-        }
-        .article-title { 
-            font-size: 0.9rem; 
-            font-weight: bold; 
-            line-height: 1.3; 
-        }
-        .article-title a:hover { 
-            color: #cc0000; 
-        }
-        
+        /* === FOOTER === */
         footer { 
-            background: #f5f5f5; 
-            border-top: 2px solid #000000; 
-            padding: 20px; 
+            background: var(--black); 
+            padding: 30px 20px; 
             text-align: center; 
-            margin-top: 30px; 
+            margin-top: 20px; 
         }
         .footer-tagline { 
             font-family: Georgia, serif; 
-            font-size: 1rem; 
+            font-size: 1.1rem; 
             font-style: italic; 
-            color: #333333; 
+            color: var(--gray-300); 
             margin-bottom: 10px; 
         }
         .footer-copy { 
             font-size: 0.7rem; 
-            color: #999999; 
+            color: var(--gray-500); 
         }
         
-        /* Responsive */
+        /* === RESPONSIVE === */
         @media (max-width: 1000px) {
-            .video-grid { grid-template-columns: repeat(3, 1fr); }
+            .video-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-            .video-grid { grid-template-columns: repeat(2, 1fr); }
-            .xposts-columns { grid-template-columns: 1fr; gap: 0; }
-            .articles-list { grid-template-columns: 1fr; }
-            .logo { font-size: 2.2rem; }
-        }
-        @media (max-width: 500px) {
             .video-grid { grid-template-columns: 1fr; }
+            .xposts-grid { grid-template-columns: 1fr; }
+            .logo { font-size: 2rem; }
+            header { padding: 12px 15px; }
+            .section { padding: 15px; }
         }
     </style>
 </head>
 <body>
-    <div class="top-banner">100% INDEPENDENT. ZERO CORPORATE MEDIA.</div>
+    <div class="top-banner">100% <span>Independent</span>. Zero Corporate Media.</div>
     
     <header>
         <a href="/" class="logo"><span class="logo-name">McMahon</span><span class="logo-dot">.NEWS</span></a>
@@ -211,27 +317,26 @@
     
     <main class="main-container">
         
-        <!-- VIDEO SECTION (TOP) -->
-        <section class="video-section">
-            <div class="section-header">📺 Latest Videos</div>
+        <!-- VIDEO SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">📺</span>
+                <span>Latest Videos</span>
+                <span class="live-dot"></span>
+            </div>
             <div class="video-grid" id="video-grid">
                 <!-- Populated by JS -->
             </div>
         </section>
         
-        <!-- X POSTS SECTION (MIDDLE) -->
-        <section class="xposts-section">
-            <div class="section-header">𝕏 Posts</div>
-            <div class="xposts-columns">
-                <div class="xposts-column" id="xposts-left"></div>
-                <div class="xposts-column" id="xposts-right"></div>
+        <!-- X POSTS SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <span class="icon">𝕏</span>
+                <span>Posts</span>
+                <span class="live-dot"></span>
             </div>
-        </section>
-        
-        <!-- ARTICLES SECTION (BOTTOM) -->
-        <section class="articles-section">
-            <div class="section-header">📰 Articles</div>
-            <div class="articles-list" id="articles-list">
+            <div class="xposts-grid" id="xposts-grid">
                 <!-- Populated by JS -->
             </div>
         </section>
@@ -239,8 +344,8 @@
     </main>
     
     <footer>
-        <div class="footer-tagline">Corporate media is dead. Long live independent news.</div>
-        <div class="footer-copy">© 2026 McMahon.News</div>
+        <div class="footer-tagline">"Corporate media is dead. Long live independent news."</div>
+        <div class="footer-copy">© 2026 McMahon.News — Aggregating independent voices since 2026</div>
     </footer>
     
     <script>
@@ -256,85 +361,65 @@
         
         function renderVideos(videos) {
             const container = document.getElementById('video-grid');
-            let html = '';
             
-            videos.forEach(video => {
-                const thumb = video.imageUrl || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect fill="%23ccc" width="16" height="9"/><text x="8" y="5" text-anchor="middle" fill="%23999" font-size="2">No Image</text></svg>';
-                html += `
+            const html = videos.map(video => {
+                const thumb = video.imageUrl || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect fill="%23ddd" width="16" height="9"/></svg>';
+                return `
                     <div class="video-card">
-                        <a href="${video.url}" target="_blank">
+                        <a href="${video.url}" target="_blank" class="video-thumb-container">
                             <img src="${thumb}" alt="" class="video-thumb" loading="lazy">
+                            <div class="video-play-btn"></div>
                         </a>
                         <div class="video-info">
                             <a href="${video.url}" target="_blank" class="video-source">${video.source}</a>
                             <div class="video-title"><a href="${video.url}" target="_blank">${video.headline}</a></div>
+                            <div class="video-meta">${video.timeAgo || ''}</div>
                         </div>
                     </div>
                 `;
-            });
+            }).join('');
             
             container.innerHTML = html;
         }
         
         function renderXPosts(tweets) {
-            const leftCol = document.getElementById('xposts-left');
-            const rightCol = document.getElementById('xposts-right');
+            const container = document.getElementById('xposts-grid');
             
-            const half = Math.ceil(tweets.length / 2);
-            const leftTweets = tweets.slice(0, half);
-            const rightTweets = tweets.slice(half);
+            const html = tweets.map(tweet => {
+                const trendingBadge = tweet.trending ? '<span class="trending-badge">🔥 Trending</span>' : '';
+                return `
+                    <div class="xpost-item">
+                        <a href="${tweet.url}" target="_blank" class="xpost-source">${tweet.source}</a>
+                        <div class="xpost-content">
+                            <div class="xpost-text"><a href="${tweet.url}" target="_blank">${tweet.headline}</a></div>
+                            <div class="xpost-meta">
+                                ${tweet.timeAgo || ''}
+                                ${trendingBadge}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
             
-            leftCol.innerHTML = leftTweets.map(tweet => `
-                <div class="xpost-item">
-                    <a href="${tweet.url}" target="_blank" class="xpost-source">${tweet.source}</a>
-                    <div class="xpost-text"><a href="${tweet.url}" target="_blank">${tweet.headline}</a></div>
-                </div>
-            `).join('');
-            
-            rightCol.innerHTML = rightTweets.map(tweet => `
-                <div class="xpost-item">
-                    <a href="${tweet.url}" target="_blank" class="xpost-source">${tweet.source}</a>
-                    <div class="xpost-text"><a href="${tweet.url}" target="_blank">${tweet.headline}</a></div>
-                </div>
-            `).join('');
-        }
-        
-        function renderArticles(articles) {
-            const container = document.getElementById('articles-list');
-            
-            container.innerHTML = articles.map(article => `
-                <div class="article-item">
-                    <a href="${article.url}" target="_blank" class="article-source">${article.source}</a>
-                    <div class="article-title"><a href="${article.url}" target="_blank">${article.headline}</a></div>
-                </div>
-            `).join('');
+            container.innerHTML = html;
         }
         
         async function loadStories() {
             try {
-                const [videosRes, tweetsRes, articlesRes] = await Promise.all([
+                const [videosRes, tweetsRes] = await Promise.all([
                     fetch('/api/videos'),
-                    fetch('/api/tweets'),
-                    fetch('/api/articles')
+                    fetch('/api/tweets')
                 ]);
                 
                 const videosData = await videosRes.json();
                 const tweetsData = await tweetsRes.json();
-                const articlesData = await articlesRes.json();
                 
-                // Render videos (top section)
                 if (videosData.videos && videosData.videos.length > 0) {
                     renderVideos(videosData.videos);
                 }
                 
-                // Render X posts (middle section)
                 if (tweetsData.tweets && tweetsData.tweets.length > 0) {
                     renderXPosts(tweetsData.tweets);
-                }
-                
-                // Render articles (bottom section)
-                if (articlesData.articles && articlesData.articles.length > 0) {
-                    renderArticles(articlesData.articles);
                 }
                 
             } catch (error) { 
