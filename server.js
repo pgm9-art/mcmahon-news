@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname)));
 // X Bearer Token
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-// === X ACCOUNTS (Primary news source) ===
+// === X ACCOUNTS ===
 const X_ACCOUNTS = [
     { handle: 'TuckerCarlson', name: 'Tucker Carlson', weight: 1.0 },
     { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
@@ -34,9 +34,8 @@ const X_ACCOUNTS = [
     { handle: 'jimmy_dore', name: 'Jimmy Dore', weight: 1.0 }
 ];
 
-// === VIDEO FEEDS (YouTube + Rumble) ===
+// === VIDEO FEEDS ===
 const VIDEO_FEEDS = [
-    // YouTube channels
     { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsox8LQ1disc39gKMO7SBDg', weight: 1.0 },
     { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC7MpzwYC_T_V1HvxSWu9f0g', weight: 1.0 },
     { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCULvqbr5KVJqa5cMGvfgx7A', weight: 1.0 },
@@ -47,80 +46,52 @@ const VIDEO_FEEDS = [
     { name: 'Owen Shroyer', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCVt4pCBSXMqmNbIpvx1Rary', weight: 1.0 },
     { name: 'Glenn Greenwald', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_IjKSS2HjhjBrC3Xb-qSdg', weight: 1.0 },
     { name: 'The Young Turks', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1yBKRuGpC1tSM73A0ZjYjQ', weight: 1.0 },
-    // Rumble - Nick Fuentes
     { name: 'Nick Fuentes', url: 'https://rumble.com/c/NickJFuentes/feed', weight: 1.0, platform: 'rumble' }
 ];
 
-// === ARTICLE FEEDS ===
-const ARTICLE_FEEDS = [
-    { name: 'Glenn Greenwald', url: 'https://greenwald.substack.com/feed', weight: 1.0 },
-    { name: 'Drop Site News', url: 'https://www.dropsitenews.com/feed', weight: 1.0 },
-    { name: 'The Grayzone', url: 'https://thegrayzone.com/feed/', weight: 1.0 },
-    { name: 'Michael Shellenberger', url: 'https://public.substack.com/feed', weight: 1.0 }
-];
-
-// === SOURCE DIVERSITY: 1 post per source per section ===
 const MAX_PER_SOURCE_PER_SECTION = 1;
 
-// Words that indicate NON-news content (filter these out)
 const NON_NEWS_FILTERS = [
     'episode', 'ep.', 'ep ', 'podcast', 'full show', 'full episode',
     'compilation', 'best of', 'highlights', 'preview', 'trailer',
     'subscribe', 'join us', 'live stream starting', 'going live'
 ];
 
-// Corporate media blacklist
-const CORPORATE_BLACKLIST = [
-    'nytimes.com', 'washingtonpost.com', 'cnn.com', 'foxnews.com', 'msnbc.com',
-    'nbcnews.com', 'abcnews.go.com', 'cbsnews.com', 'wsj.com', 'usatoday.com',
-    'reuters.com', 'apnews.com', 'bbc.com', 'theguardian.com', 'politico.com',
-    'thehill.com', 'axios.com', 'huffpost.com', 'vox.com', 'vice.com',
-    'buzzfeed.com', 'dailybeast.com', 'slate.com', 'salon.com', 'motherjones.com',
-    'forbes.com', 'bloomberg.com', 'businessinsider.com', 'cnbc.com'
-];
-
-// In-memory cache
 let cachedTweets = [];
 let cachedVideos = [];
-let cachedArticles = [];
 let lastFetch = null;
 
-// Check if headline is actual news
 function isNewsContent(headline) {
     const lower = headline.toLowerCase();
     return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
 }
 
-// Check if URL is from corporate media
-function isCorporateMedia(url) {
-    if (!url) return false;
-    return CORPORATE_BLACKLIST.some(domain => url.toLowerCase().includes(domain));
-}
-
-// Get video thumbnail URL
 function getVideoThumbnail(item, feed) {
-    // YouTube thumbnail
     if (feed.url.includes('youtube.com') && item.link) {
         const match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
         if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
     }
-    
-    // Rumble thumbnail from enclosure or media
     if (item.enclosure?.url) return item.enclosure.url;
-    
-    // Try to extract from content
     if (item.content) {
         const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
         if (imgMatch) return imgMatch[1];
     }
-    
-    // Rumble specific - try media:thumbnail
     if (item['media:thumbnail']?.$.url) return item['media:thumbnail'].$.url;
-    
     return null;
 }
 
-// Fetch tweets from X API
+function timeAgo(dateString) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+    if (seconds < 172800) return 'yesterday';
+    return Math.floor(seconds / 86400) + 'd ago';
+}
+
 async function fetchXPosts() {
     if (!X_BEARER_TOKEN) {
         console.log('No X Bearer Token - skipping X API');
@@ -162,15 +133,19 @@ async function fetchXPosts() {
                         headline = headline.substring(0, 147) + '...';
                     }
 
+                    const engagement = tweet.public_metrics ? 
+                        (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2 + tweet.public_metrics.reply_count) : 0;
+
                     stories.push({
                         headline: headline,
                         url: `https://x.com/${account.handle}/status/${tweet.id}`,
                         source: account.name,
                         sourceHandle: account.handle,
                         pubDate: tweet.created_at,
+                        timeAgo: timeAgo(tweet.created_at),
                         type: 'tweet',
-                        engagement: tweet.public_metrics ? 
-                            (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2 + tweet.public_metrics.reply_count) : 0,
+                        engagement: engagement,
+                        trending: engagement > 1000,
                         sourceWeight: account.weight
                     });
                 }
@@ -186,7 +161,6 @@ async function fetchXPosts() {
     return stories;
 }
 
-// Fetch video feeds
 async function fetchVideoFeeds() {
     const videos = [];
 
@@ -198,12 +172,14 @@ async function fetchVideoFeeds() {
                 if (!isNewsContent(item.title)) continue;
 
                 const thumbnail = getVideoThumbnail(item, feed);
+                const pubDate = item.pubDate || item.isoDate || new Date().toISOString();
 
                 videos.push({
                     headline: item.title,
                     url: item.link,
                     source: feed.name,
-                    pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+                    pubDate: pubDate,
+                    timeAgo: timeAgo(pubDate),
                     imageUrl: thumbnail,
                     type: 'video',
                     platform: feed.platform || 'youtube',
@@ -219,38 +195,6 @@ async function fetchVideoFeeds() {
     return videos;
 }
 
-// Fetch article feeds
-async function fetchArticleFeeds() {
-    const articles = [];
-
-    for (const feed of ARTICLE_FEEDS) {
-        try {
-            const parsed = await parser.parseURL(feed.url);
-
-            for (const item of parsed.items.slice(0, 5)) {
-                if (!isNewsContent(item.title)) continue;
-                if (isCorporateMedia(item.link)) continue;
-
-                articles.push({
-                    headline: item.title,
-                    url: item.link,
-                    source: feed.name,
-                    pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
-                    excerpt: item.contentSnippet?.slice(0, 200) || '',
-                    type: 'article',
-                    engagement: 0,
-                    sourceWeight: feed.weight
-                });
-            }
-        } catch (error) {
-            console.error(`Error fetching articles from ${feed.name}:`, error.message);
-        }
-    }
-
-    return articles;
-}
-
-// Score stories for ranking
 function calculateScore(story) {
     const now = Date.now();
     const storyDate = new Date(story.pubDate).getTime();
@@ -274,7 +218,6 @@ function calculateScore(story) {
     return recencyScore + sourceScore + engagementScore;
 }
 
-// Get only highest-engagement post per source
 function getTopPostPerSource(stories, maxPerSource = 1) {
     const sorted = [...stories].sort((a, b) => b.score - a.score);
     
@@ -290,27 +233,22 @@ async function refreshStories() {
     console.log('Refreshing stories...');
 
     try {
-        const [xPosts, videos, articles] = await Promise.all([
+        const [xPosts, videos] = await Promise.all([
             fetchXPosts(),
-            fetchVideoFeeds(),
-            fetchArticleFeeds()
+            fetchVideoFeeds()
         ]);
 
-        console.log(`Fetched ${xPosts.length} X posts, ${videos.length} videos, ${articles.length} articles`);
+        console.log(`Fetched ${xPosts.length} X posts, ${videos.length} videos`);
 
-        // Score all stories
         const scoredXPosts = xPosts.map(story => ({ ...story, score: calculateScore(story) }));
         const scoredVideos = videos.map(story => ({ ...story, score: calculateScore(story) }));
-        const scoredArticles = articles.map(story => ({ ...story, score: calculateScore(story) }));
 
-        // Apply: 1 post per source per section (highest engagement wins)
         cachedTweets = getTopPostPerSource(scoredXPosts, MAX_PER_SOURCE_PER_SECTION);
         cachedVideos = getTopPostPerSource(scoredVideos, MAX_PER_SOURCE_PER_SECTION);
-        cachedArticles = getTopPostPerSource(scoredArticles, MAX_PER_SOURCE_PER_SECTION);
 
         lastFetch = new Date();
 
-        console.log(`Cached: ${cachedTweets.length} tweets, ${cachedVideos.length} videos, ${cachedArticles.length} articles`);
+        console.log(`Cached: ${cachedTweets.length} tweets, ${cachedVideos.length} videos`);
         console.log(`Video sources: ${cachedVideos.map(v => v.source).join(', ')}`);
 
     } catch (error) {
@@ -320,7 +258,6 @@ async function refreshStories() {
 
 // === API ENDPOINTS ===
 
-// Tweets only
 app.get('/api/tweets', (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     res.json({ 
@@ -330,7 +267,6 @@ app.get('/api/tweets', (req, res) => {
     });
 });
 
-// Videos only
 app.get('/api/videos', (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     res.json({ 
@@ -340,34 +276,11 @@ app.get('/api/videos', (req, res) => {
     });
 });
 
-// Articles only
-app.get('/api/articles', (req, res) => {
-    const limit = parseInt(req.query.limit) || 20;
-    res.json({ 
-        articles: cachedArticles.slice(0, limit), 
-        lastUpdated: lastFetch, 
-        count: cachedArticles.length 
-    });
-});
-
-// All stories combined (legacy)
-app.get('/api/stories', (req, res) => {
-    const limit = parseInt(req.query.limit) || 50;
-    const allStories = [...cachedTweets, ...cachedVideos, ...cachedArticles];
-    allStories.sort((a, b) => b.score - a.score);
-    res.json({ 
-        stories: allStories.slice(0, limit), 
-        lastUpdated: lastFetch, 
-        count: allStories.length 
-    });
-});
-
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         tweets: cachedTweets.length,
         videos: cachedVideos.length,
-        articles: cachedArticles.length,
         lastFetch: lastFetch, 
         uptime: process.uptime() 
     });
@@ -378,8 +291,7 @@ app.get('/api/refresh', async (req, res) => {
     res.json({ 
         success: true, 
         tweets: cachedTweets.length,
-        videos: cachedVideos.length,
-        articles: cachedArticles.length
+        videos: cachedVideos.length
     });
 });
 
@@ -393,5 +305,4 @@ refreshStories().then(() => {
     });
 });
 
-// Refresh every 15 minutes
 setInterval(refreshStories, 15 * 60 * 1000);
