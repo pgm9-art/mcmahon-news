@@ -22,7 +22,7 @@ const X_ACCOUNTS = [
     { handle: 'ggreenwald', name: 'Glenn Greenwald', weight: 1.0 },
     { handle: 'NickJFuentes', name: 'Nick Fuentes', weight: 1.0 },
     { handle: 'OwenShroyer', name: 'Owen Shroyer', weight: 1.0 },
-    { handle: 'shellaborger', name: 'Michael Shellenberger', weight: 1.0 },
+    { handle: 'shellenberger', name: 'Michael Shellenberger', weight: 1.0 },
     { handle: 'Judgenap', name: 'Judge Napolitano', weight: 1.0 },
     { handle: 'AFpost', name: 'AF Post', weight: 1.0 },
     { handle: 'BreakingPoints', name: 'Breaking Points', weight: 1.0 },
@@ -50,11 +50,13 @@ const RSS_FEEDS = [
     { name: 'Bret Weinstein', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCi5N_uAqApEUIlg32QzkPlg', weight: 1.0, type: 'video' },
     { name: 'Dave Smith', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC6gH70EPp8QQjRfEcW2t4uA', weight: 1.0, type: 'video' },
     { name: 'The Grayzone', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCEXR8pRTkE2vFeJePNe9UcQ', weight: 1.0, type: 'video' },
-    { name: 'Owen Shroyer', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCVt4pCBSXMqmNbIpvx1Rary', weight: 1.0, type: 'video' }
+    { name: 'Owen Shroyer', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCVt4pCBSXMqmNbIpvx1Rary', weight: 1.0, type: 'video' },
+    { name: 'Glenn Greenwald', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_IjKSS2HjhjBrC3Xb-qSdg', weight: 1.0, type: 'video' },
+    { name: 'Nick Fuentes', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCfgU1V7-V8vEwvySfH2FuLg', weight: 1.0, type: 'video' }
 ];
 
-// === SOURCE DIVERSITY CAP ===
-const MAX_PER_SOURCE_PER_SECTION = 2;
+// === SOURCE DIVERSITY: ONLY 1 POST PER SOURCE PER SECTION ===
+const MAX_PER_SOURCE_PER_SECTION = 1;
 
 // Words that indicate NON-news content (filter these out)
 const NON_NEWS_FILTERS = [
@@ -73,11 +75,11 @@ const CORPORATE_BLACKLIST = [
     'forbes.com', 'bloomberg.com', 'businessinsider.com', 'cnbc.com'
 ];
 
-// In-memory cache - now separated by section
+// In-memory cache - separated by section
 let cachedTweets = [];
 let cachedVideos = [];
 let cachedArticles = [];
-let cachedStories = [];
+let cachedTop15 = [];
 let lastFetch = null;
 
 // Check if headline is actual news (not podcast episode)
@@ -129,15 +131,17 @@ async function fetchXPosts() {
                     if (!isNewsContent(tweet.text)) continue;
                     if (tweet.text.length < 50) continue;
 
+                    // Clean headline - remove source prefix, we'll add it in frontend
                     let headline = tweet.text.split('\n')[0];
                     if (headline.length > 150) {
                         headline = headline.substring(0, 147) + '...';
                     }
 
                     stories.push({
-                        headline: `${account.name.toUpperCase()}: ${headline}`,
+                        headline: headline,
                         url: `https://x.com/${account.handle}/status/${tweet.id}`,
                         source: account.name,
+                        sourceHandle: account.handle,
                         pubDate: tweet.created_at,
                         type: 'tweet',
                         engagement: tweet.public_metrics ? 
@@ -169,10 +173,8 @@ async function fetchRSSFeeds() {
                 if (!isNewsContent(item.title)) continue;
                 if (isCorporateMedia(item.link)) continue;
 
-                const headline = formatHeadline(feed.name, item.title);
-
                 stories.push({
-                    headline: headline,
+                    headline: item.title,
                     url: item.link,
                     source: feed.name,
                     pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
@@ -207,24 +209,13 @@ function getImageUrl(item, feed) {
     return null;
 }
 
-function formatHeadline(source, headline) {
-    const sourceName = source.toUpperCase();
-    const firstName = sourceName.split(' ')[0];
-
-    if (headline.toUpperCase().startsWith(firstName) || headline.toUpperCase().startsWith(sourceName)) {
-        return headline;
-    }
-
-    return `${sourceName}: ${headline}`;
-}
-
-// === UPDATED SCORING - ENGAGEMENT/TRENDING PRIORITY ===
+// === ENGAGEMENT/TRENDING PRIORITY SCORING ===
 function calculateScore(story) {
     const now = Date.now();
     const storyDate = new Date(story.pubDate).getTime();
     const ageHours = (now - storyDate) / (1000 * 60 * 60);
 
-    // Recency score (max 30 points) - reduced from before
+    // Recency score (max 30 points)
     let recencyScore = 0;
     if (ageHours < 3) recencyScore = 30;
     else if (ageHours < 6) recencyScore = 25;
@@ -236,21 +227,22 @@ function calculateScore(story) {
     // Source weight score (max 20 points)
     const sourceScore = (story.sourceWeight || 0.5) * 20;
 
-    // === ENGAGEMENT/TRENDING SCORE (max 50 points) - NOW PRIMARY FACTOR ===
+    // === ENGAGEMENT/TRENDING SCORE (max 50 points) - PRIMARY FACTOR ===
     let engagementScore = 5;
     if (story.type === 'tweet' && story.engagement) {
-        // Logarithmic scale for engagement
-        // 100 engagement = ~15 points, 1000 = ~25 points, 10000 = ~35 points, 100000 = ~45 points
         engagementScore = Math.min(50, 5 + Math.log10(story.engagement + 1) * 10);
     }
 
     return recencyScore + sourceScore + engagementScore;
 }
 
-// === APPLY SOURCE DIVERSITY CAP PER SECTION ===
-function applySourceCap(stories, maxPerSource) {
+// === GET ONLY HIGHEST-ENGAGEMENT POST PER SOURCE ===
+function getTopPostPerSource(stories, maxPerSource = 1) {
+    // Sort by score first
+    const sorted = [...stories].sort((a, b) => b.score - a.score);
+    
     const sourceCounts = {};
-    return stories.filter(story => {
+    return sorted.filter(story => {
         const source = story.source.toLowerCase();
         sourceCounts[source] = (sourceCounts[source] || 0) + 1;
         return sourceCounts[source] <= maxPerSource;
@@ -269,28 +261,24 @@ async function refreshStories() {
         const scoredXPosts = xPosts.map(story => ({ ...story, score: calculateScore(story) }));
         const scoredRSS = rssStories.map(story => ({ ...story, score: calculateScore(story) }));
 
-        // Sort by score (trending/engagement priority)
-        scoredXPosts.sort((a, b) => b.score - a.score);
-        scoredRSS.sort((a, b) => b.score - a.score);
-
         // Separate videos and articles
         const videos = scoredRSS.filter(s => s.type === 'video');
         const articles = scoredRSS.filter(s => s.type === 'article');
 
-        // Apply source cap PER SECTION (Option B: 2 per source per section)
-        cachedTweets = applySourceCap(scoredXPosts, MAX_PER_SOURCE_PER_SECTION);
-        cachedVideos = applySourceCap(videos, MAX_PER_SOURCE_PER_SECTION);
-        cachedArticles = applySourceCap(articles, MAX_PER_SOURCE_PER_SECTION);
+        // Apply: ONLY 1 post per source per section (highest engagement wins)
+        cachedTweets = getTopPostPerSource(scoredXPosts, MAX_PER_SOURCE_PER_SECTION);
+        cachedVideos = getTopPostPerSource(videos, MAX_PER_SOURCE_PER_SECTION);
+        cachedArticles = getTopPostPerSource(articles, MAX_PER_SOURCE_PER_SECTION);
 
-        // Combined feed for top 10 (also capped)
+        // Top 15: Combined from all, but only 1 per source total
         const allStories = [...scoredXPosts, ...scoredRSS];
         allStories.sort((a, b) => b.score - a.score);
-        cachedStories = applySourceCap(allStories, MAX_PER_SOURCE_PER_SECTION);
+        cachedTop15 = getTopPostPerSource(allStories, 1).slice(0, 15);
 
         lastFetch = new Date();
 
         console.log(`Cached: ${cachedTweets.length} tweets, ${cachedVideos.length} videos, ${cachedArticles.length} articles`);
-        console.log(`Total combined: ${cachedStories.length} stories`);
+        console.log(`Top 15 sources: ${cachedTop15.map(s => s.source).join(', ')}`);
 
     } catch (error) {
         console.error('Error refreshing stories:', error);
@@ -299,28 +287,46 @@ async function refreshStories() {
 
 // === API ENDPOINTS ===
 
-// All stories combined
-app.get('/api/stories', (req, res) => {
-    const limit = parseInt(req.query.limit) || 50;
-    res.json({ 
-        stories: cachedStories.slice(0, limit), 
-        lastUpdated: lastFetch, 
-        count: cachedStories.length 
-    });
-});
-
-// Top 10 trending
-app.get('/api/top10', (req, res) => {
-    const top10 = cachedStories.slice(0, 10).map((story, index) => ({
+// Top 15 trending (one per source)
+app.get('/api/top15', (req, res) => {
+    const top15 = cachedTop15.map((story, index) => ({
         rank: index + 1, 
         headline: story.headline, 
         url: story.url, 
-        source: story.source, 
+        source: story.source,
+        sourceHandle: story.sourceHandle || null,
         type: story.type,
         engagement: story.engagement || 0,
         hot: index < 3
     }));
-    res.json({ top10, lastUpdated: lastFetch });
+    res.json({ top15, lastUpdated: lastFetch });
+});
+
+// Legacy top10 endpoint (now returns top 15)
+app.get('/api/top10', (req, res) => {
+    const top15 = cachedTop15.map((story, index) => ({
+        rank: index + 1, 
+        headline: story.headline, 
+        url: story.url, 
+        source: story.source,
+        sourceHandle: story.sourceHandle || null,
+        type: story.type,
+        engagement: story.engagement || 0,
+        hot: index < 3
+    }));
+    res.json({ top10: top15, lastUpdated: lastFetch });
+});
+
+// All stories combined
+app.get('/api/stories', (req, res) => {
+    const limit = parseInt(req.query.limit) || 50;
+    const allStories = [...cachedTweets, ...cachedVideos, ...cachedArticles];
+    allStories.sort((a, b) => b.score - a.score);
+    res.json({ 
+        stories: allStories.slice(0, limit), 
+        lastUpdated: lastFetch, 
+        count: allStories.length 
+    });
 });
 
 // Tweets only
@@ -356,7 +362,7 @@ app.get('/api/articles', (req, res) => {
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
-        stories: cachedStories.length,
+        top15: cachedTop15.length,
         tweets: cachedTweets.length,
         videos: cachedVideos.length,
         articles: cachedArticles.length,
@@ -369,7 +375,7 @@ app.get('/api/refresh', async (req, res) => {
     await refreshStories();
     res.json({ 
         success: true, 
-        count: cachedStories.length,
+        top15: cachedTop15.length,
         tweets: cachedTweets.length,
         videos: cachedVideos.length,
         articles: cachedArticles.length
