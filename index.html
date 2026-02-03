@@ -21,11 +21,28 @@
         .logo-name { color: #000000; }
         .logo-dot { color: #cc0000; }
         .header-meta { margin-top: 8px; font-size: 0.8rem; color: #666666; }
-        .main-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .main-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Lead Story */
         .lead-story { text-align: center; padding: 20px 0; border-bottom: 1px solid #cccccc; }
         .lead-headline { font-size: 1.8rem; font-weight: bold; line-height: 1.2; margin-bottom: 5px; }
         .lead-headline a:hover { color: #cc0000; }
         .lead-source { font-size: 0.7rem; color: #cc0000; text-transform: uppercase; letter-spacing: 1px; }
+        .lead-type { font-size: 0.6rem; color: #666666; text-transform: uppercase; margin-top: 5px; }
+        
+        /* Top 10 Section */
+        .top10-section { padding: 20px 0; border-bottom: 1px solid #cccccc; }
+        .section-title { font-size: 1rem; color: #cc0000; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; margin-bottom: 15px; text-align: center; }
+        .top10-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 30px; }
+        .top10-item { display: flex; align-items: baseline; padding: 8px 0; border-bottom: 1px dotted #dddddd; }
+        .top10-rank { font-size: 1.2rem; font-weight: bold; color: #cc0000; min-width: 30px; }
+        .top10-content { flex: 1; }
+        .top10-headline { font-size: 0.85rem; font-weight: bold; line-height: 1.3; }
+        .top10-headline a:hover { color: #cc0000; }
+        .top10-meta { font-size: 0.65rem; color: #999999; text-transform: uppercase; margin-top: 2px; }
+        .top10-item.hot .top10-headline { color: #cc0000; }
+        
+        /* Three Columns */
         .columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; padding: 20px 0; }
         .column { border-right: 1px solid #eeeeee; padding-right: 20px; }
         .column:last-child { border-right: none; padding-right: 0; }
@@ -35,16 +52,22 @@
         .headline-text { font-size: 0.9rem; font-weight: bold; line-height: 1.3; }
         .headline-text a:hover { color: #cc0000; }
         .headline-source { font-size: 0.65rem; color: #999999; text-transform: uppercase; margin-top: 3px; }
-        .hot .headline-text { color: #cc0000; }
+        .headline-item.hot .headline-text { color: #cc0000; }
+        
+        /* Video thumbnail styling */
+        .video-thumb { width: 100%; height: auto; margin-bottom: 8px; border: 1px solid #ddd; }
+        
         footer { background: #f5f5f5; border-top: 2px solid #000000; padding: 20px; text-align: center; margin-top: 30px; }
         .footer-tagline { font-family: Georgia, serif; font-size: 1rem; font-style: italic; color: #333333; margin-bottom: 10px; }
         .footer-copy { font-size: 0.7rem; color: #999999; }
+        
         @media (max-width: 768px) {
             .columns { grid-template-columns: 1fr; gap: 0; }
             .column { border-right: none; border-bottom: 1px solid #eeeeee; padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
             .column:last-child { border-bottom: none; }
             .logo { font-size: 2.2rem; }
             .lead-headline { font-size: 1.4rem; }
+            .top10-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -54,53 +77,146 @@
         <a href="/" class="logo"><span class="logo-name">McMahon</span><span class="logo-dot">.NEWS</span></a>
         <div class="header-meta"><span id="current-date"></span> • <span id="last-updated"></span></div>
     </header>
+    
     <main class="main-container">
+        <!-- Lead Story -->
         <div class="lead-story" id="lead-story">
             <div class="lead-source">LOADING...</div>
             <h1 class="lead-headline"><a href="#">Loading top story...</a></h1>
         </div>
+        
+        <!-- Top 10 Trending -->
+        <div class="top10-section">
+            <div class="section-title">🔥 Top 10 Right Now</div>
+            <div class="top10-grid" id="top10-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+        
+        <!-- Three Columns: X Posts, Videos, Articles -->
         <div class="columns">
-            <div class="column" id="column-left"><div class="column-header">Top Stories</div></div>
-            <div class="column" id="column-center"><div class="column-header">Independent Voices</div></div>
-            <div class="column" id="column-right"><div class="column-header">Latest</div></div>
+            <div class="column" id="column-xposts">
+                <div class="column-header">X Posts</div>
+            </div>
+            <div class="column" id="column-videos">
+                <div class="column-header">Videos</div>
+            </div>
+            <div class="column" id="column-articles">
+                <div class="column-header">Articles</div>
+            </div>
         </div>
     </main>
+    
     <footer>
         <div class="footer-tagline">Corporate media is dead. Long live independent news.</div>
         <div class="footer-copy">© 2026 McMahon.News</div>
     </footer>
+    
     <script>
         function updateDateTime() {
             const now = new Date();
-            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-            document.getElementById('last-updated').textContent = 'Updated ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
+            });
+            document.getElementById('last-updated').textContent = 'Updated ' + now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', minute: '2-digit' 
+            });
         }
+        
         function renderLeadStory(story) {
-            document.getElementById('lead-story').innerHTML = '<div class="lead-source">' + story.source + '</div><h1 class="lead-headline"><a href="' + story.url + '" target="_blank">' + story.headline + '</a></h1>';
+            const typeLabel = story.type === 'tweet' ? 'X POST' : story.type.toUpperCase();
+            document.getElementById('lead-story').innerHTML = `
+                <div class="lead-source">${story.source}</div>
+                <h1 class="lead-headline"><a href="${story.url}" target="_blank">${story.headline}</a></h1>
+                <div class="lead-type">${typeLabel}</div>
+            `;
         }
-        function renderColumn(containerId, stories, headerText) {
-            const container = document.getElementById(containerId);
-            let html = '<div class="column-header">' + headerText + '</div>';
-            stories.forEach((story, index) => {
-                html += '<div class="headline-item ' + (index < 2 ? 'hot' : '') + '"><div class="headline-text"><a href="' + story.url + '" target="_blank">' + story.headline + '</a></div><div class="headline-source">' + story.source + '</div></div>';
+        
+        function renderTop10(stories) {
+            const container = document.getElementById('top10-grid');
+            let html = '';
+            stories.slice(0, 10).forEach((story, index) => {
+                const isHot = index < 3 ? 'hot' : '';
+                const typeLabel = story.type === 'tweet' ? 'X' : story.type.toUpperCase();
+                html += `
+                    <div class="top10-item ${isHot}">
+                        <div class="top10-rank">${index + 1}</div>
+                        <div class="top10-content">
+                            <div class="top10-headline"><a href="${story.url}" target="_blank">${story.headline}</a></div>
+                            <div class="top10-meta">${story.source} • ${typeLabel}</div>
+                        </div>
+                    </div>
+                `;
             });
             container.innerHTML = html;
         }
+        
+        function renderColumn(containerId, stories, headerText, showThumbnails = false) {
+            const container = document.getElementById(containerId);
+            let html = `<div class="column-header">${headerText}</div>`;
+            stories.forEach((story, index) => {
+                const isHot = index < 2 ? 'hot' : '';
+                let thumbnail = '';
+                if (showThumbnails && story.imageUrl) {
+                    thumbnail = `<a href="${story.url}" target="_blank"><img src="${story.imageUrl}" alt="" class="video-thumb" loading="lazy"></a>`;
+                }
+                html += `
+                    <div class="headline-item ${isHot}">
+                        ${thumbnail}
+                        <div class="headline-text"><a href="${story.url}" target="_blank">${story.headline}</a></div>
+                        <div class="headline-source">${story.source}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
         async function loadStories() {
             try {
-                const response = await fetch('/api/stories');
-                const data = await response.json();
-                if (data.stories && data.stories.length > 0) {
-                    const stories = data.stories;
-                    renderLeadStory(stories[0]);
-                    renderColumn('column-left', stories.slice(1, 8), 'Top Stories');
-                    renderColumn('column-center', stories.slice(8, 15), 'Independent Voices');
-                    renderColumn('column-right', stories.slice(15, 22), 'Latest');
+                // Fetch all three sections in parallel
+                const [storiesRes, tweetsRes, videosRes, articlesRes] = await Promise.all([
+                    fetch('/api/stories'),
+                    fetch('/api/tweets'),
+                    fetch('/api/videos'),
+                    fetch('/api/articles')
+                ]);
+                
+                const storiesData = await storiesRes.json();
+                const tweetsData = await tweetsRes.json();
+                const videosData = await videosRes.json();
+                const articlesData = await articlesRes.json();
+                
+                // Lead story from top trending
+                if (storiesData.stories && storiesData.stories.length > 0) {
+                    renderLeadStory(storiesData.stories[0]);
+                    renderTop10(storiesData.stories);
                 }
-            } catch (error) { console.error('Error loading stories:', error); }
+                
+                // X Posts column
+                if (tweetsData.tweets && tweetsData.tweets.length > 0) {
+                    renderColumn('column-xposts', tweetsData.tweets.slice(0, 15), 'X Posts');
+                }
+                
+                // Videos column (with thumbnails)
+                if (videosData.videos && videosData.videos.length > 0) {
+                    renderColumn('column-videos', videosData.videos.slice(0, 10), 'Videos', true);
+                }
+                
+                // Articles column
+                if (articlesData.articles && articlesData.articles.length > 0) {
+                    renderColumn('column-articles', articlesData.articles.slice(0, 15), 'Articles');
+                }
+                
+            } catch (error) { 
+                console.error('Error loading stories:', error); 
+            }
         }
+        
+        // Initialize
         updateDateTime();
         loadStories();
+        
+        // Auto-refresh
         setInterval(updateDateTime, 60000);
         setInterval(loadStories, 5 * 60 * 1000);
     </script>
