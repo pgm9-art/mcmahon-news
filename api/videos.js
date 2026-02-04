@@ -1,97 +1,124 @@
-const RSSParser = require('rss-parser');
+const fetch = require('node-fetch');
 
-const parser = new RSSParser({
-    customFields: {
-        item: [['media:group', 'mediaGroup'], ['media:thumbnail', 'mediaThumbnail']]
-    }
-});
-
-const VIDEO_FEEDS = [
-    { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjjBjVc0b1cIpNGEeZtS2lg' },
-    { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDkEYb-TXJVWLv0okshtlsw' },
-    { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDRIjKy6eZ0vKt0ELtTdeUA' },
-    { name: 'Jimmy Dore', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC3M718ved_rYQ45AVzS0RGA' },
-    { name: 'Bret Weinstein', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCi5N_uAqApEUIlg32QzkPlg' },
-    { name: 'Dave Smith', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCEfe80CP2cs1eLRNQazffZw' },
-    { name: 'The Grayzone', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCEXR8pRTkE2vFeJePNe9UcQ' },
-    { name: 'Glenn Greenwald', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UChzVhAwzGR7hV-408ZmBLHg' },
-    { name: 'The Young Turks', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1yBKRuGpC1tSM73A0ZjYjQ' },
-    { name: 'Owen Shroyer', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC-hW9CchHhAEZNfPgkMpysg' },
-    { name: 'Nick Fuentes', url: 'https://openrss.org/rumble.com/c/NickJFuentes', platform: 'rumble' }
+// 13 YouTube + 2 Rumble = 15 Video Sources
+const YOUTUBE_CHANNELS = [
+    { id: 'UCGttrUON87gWfU6dMWm1fcA', name: 'Tucker Carlson', handle: 'tuckercarlson' },
+    { id: 'UCjjBjVc0b1cIpNGEeZtS2lg', name: 'TCN', handle: 'tcnetwork' },
+    { id: 'UCDkEYb-TXJVWLvOokshtlsw', name: 'Judge Napolitano', handle: 'judgingfreedom' },
+    { id: 'UCuMo0RRtnNDuMB8DV5stEag', name: 'Breaking Points', handle: 'breakingpoints' },
+    { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow' },
+    { id: 'UCi5N_uAqApEUIlg32QzkPlg', name: 'Bret Weinstein', handle: 'darkhorsepod' },
+    { id: 'UCT5FOHgYZGRrPkVokP7Pm6A', name: 'Dave Smith', handle: 'partoftheproblem' },
+    { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks' },
+    { id: 'UCbn1OgGei-DV7aSRo_HaZ0Q', name: 'Glenn Greenwald', handle: 'glenngreenwald' },
+    { id: 'UCh3xEPDFqZVvyXPfCPoxdog', name: 'Owen Shroyer', handle: 'owenreport' },
+    { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan' },
+    { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow' },
+    { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996' }
 ];
 
-const MAX_PER_SOURCE = 3;
-const NON_NEWS_FILTERS = ['subscribe', 'join us', 'live stream starting', 'going live', 'trailer', 'preview'];
-
-function isNewsContent(headline) {
-    if (!headline) return false;
-    var lower = headline.toLowerCase();
-    for (var i = 0; i < NON_NEWS_FILTERS.length; i++) {
-        if (lower.indexOf(NON_NEWS_FILTERS[i]) !== -1) return false;
-    }
-    return true;
-}
-
-function getVideoThumbnail(item, platform, feedName) {
-    // Try YouTube thumbnail from link
-    if (item.link) {
-        var match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-        if (match) return 'https://img.youtube.com/vi/' + match[1] + '/hqdefault.jpg';
-    }
-    
-    // Try media:group thumbnail
-    if (item.mediaGroup && item.mediaGroup['media:thumbnail']) {
-        var thumb = item.mediaGroup['media:thumbnail'];
-        if (Array.isArray(thumb) && thumb[0] && thumb[0].$) return thumb[0].$.url;
-        if (thumb && thumb.$) return thumb.$.url;
-    }
-    
-    // Try media:thumbnail directly
-    if (item.mediaThumbnail) {
-        if (Array.isArray(item.mediaThumbnail) && item.mediaThumbnail[0]) {
-            if (item.mediaThumbnail[0].$ && item.mediaThumbnail[0].$.url) return item.mediaThumbnail[0].$.url;
-            if (typeof item.mediaThumbnail[0] === 'string') return item.mediaThumbnail[0];
-        }
-        if (item.mediaThumbnail.$ && item.mediaThumbnail.$.url) return item.mediaThumbnail.$.url;
-    }
-    
-    // Try enclosure
-    if (item.enclosure && item.enclosure.url && item.enclosure.type && item.enclosure.type.indexOf('image') !== -1) {
-        return item.enclosure.url;
-    }
-    
-    // Rumble fallback - use a placeholder with channel branding
-    if (platform === 'rumble') {
-        return 'https://placehold.co/640x360/1a1a2e/ffffff?text=' + encodeURIComponent(feedName);
-    }
-    
-    return null;
-}
+const RUMBLE_CHANNELS = [
+    { handle: 'nickjfuentes', name: 'Nick Fuentes' },
+    { handle: 'StewPeters', name: 'Stew Peters' }
+];
 
 function timeAgo(dateString) {
-    var now = new Date();
-    var date = new Date(dateString);
-    var seconds = Math.floor((now - date) / 1000);
+    const now = new Date();
+    const date = new Date(dateString);
+    const seconds = Math.floor((now - date) / 1000);
+    
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
     if (seconds < 172800) return 'yesterday';
-    return Math.floor(seconds / 86400) + 'd ago';
+    if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
+    return Math.floor(seconds / 604800) + 'w ago';
 }
 
-function sortByRecency(items) {
-    return items.sort(function(a, b) {
-        return new Date(b.pubDate) - new Date(a.pubDate);
-    });
+async function fetchYouTubeVideo(channel) {
+    const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+    const response = await fetch(feedUrl);
+    
+    if (!response.ok) {
+        throw new Error(`Feed fetch failed (${response.status})`);
+    }
+    
+    const xml = await response.text();
+    
+    const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
+    if (!entryMatch) {
+        throw new Error('No entries in feed');
+    }
+    
+    const entry = entryMatch[1];
+    const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1];
+    const title = entry.match(/<title>([^<]+)<\/title>/)?.[1];
+    const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
+    const channelImg = entry.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1];
+    
+    if (!videoId || !title) {
+        throw new Error('Could not parse video data');
+    }
+    
+    const decodedTitle = title
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+    
+    return {
+        id: videoId,
+        title: decodedTitle,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+        thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+        source: channel.name,
+        sourceHandle: channel.handle,
+        platform: 'youtube',
+        pubDate: published,
+        timeAgo: timeAgo(published)
+    };
 }
 
-function limitPerSource(items, max) {
-    var counts = {};
-    return items.filter(function(item) {
-        var src = item.source.toLowerCase();
-        counts[src] = (counts[src] || 0) + 1;
-        return counts[src] <= max;
-    });
+async function fetchRumbleVideo(channel) {
+    const feedUrl = `https://openrss.org/rumble.com/c/${channel.handle}`;
+    const response = await fetch(feedUrl);
+    
+    if (!response.ok) {
+        throw new Error(`Rumble feed failed (${response.status})`);
+    }
+    
+    const xml = await response.text();
+    
+    const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+    if (!itemMatch) {
+        throw new Error('No items in Rumble feed');
+    }
+    
+    const item = itemMatch[1];
+    const title = item.match(/<title>(?:<!\[CDATA\[)?([^\]<]+)(?:\]\]>)?<\/title>/)?.[1];
+    const link = item.match(/<link>([^<]+)<\/link>/)?.[1];
+    const pubDate = item.match(/<pubDate>([^<]+)<\/pubDate>/)?.[1];
+    let thumbnail = item.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1];
+    if (!thumbnail) {
+        thumbnail = item.match(/<enclosure[^>]*url="([^"]+)"/)?.[1];
+    }
+    
+    if (!title || !link) {
+        throw new Error('Could not parse Rumble video data');
+    }
+    
+    return {
+        id: link,
+        title: title.trim(),
+        url: link,
+        thumbnail: thumbnail || null,
+        source: channel.name,
+        sourceHandle: channel.handle,
+        platform: 'rumble',
+        pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        timeAgo: pubDate ? timeAgo(pubDate) : 'recently'
+    };
 }
 
 module.exports = async function(req, res) {
@@ -99,67 +126,39 @@ module.exports = async function(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     
-    try {
-        var limit = parseInt(req.query.limit) || 20;
-        var videos = [];
-        var errors = [];
-        
-        var results = await Promise.allSettled(
-            VIDEO_FEEDS.map(async function(feed) {
-                try {
-                    var parsed = await parser.parseURL(feed.url);
-                    if (parsed.items && parsed.items.length > 0) {
-                        var feedVideos = [];
-                        var items = parsed.items.slice(0, 5);
-                        for (var i = 0; i < items.length; i++) {
-                            var item = items[i];
-                            if (!isNewsContent(item.title)) continue;
-                            var pubDate = item.pubDate || item.isoDate || new Date().toISOString();
-                            var platform = feed.platform || 'youtube';
-                            feedVideos.push({
-                                headline: item.title,
-                                url: item.link,
-                                source: feed.name,
-                                pubDate: pubDate,
-                                timeAgo: timeAgo(pubDate),
-                                imageUrl: getVideoThumbnail(item, platform, feed.name),
-                                type: 'video',
-                                platform: platform
-                            });
-                        }
-                        return { feed: feed, videos: feedVideos };
-                    }
-                    return { feed: feed, videos: [] };
-                } catch (error) {
-                    return { feed: feed, error: error.message };
-                }
-            })
-        );
-        
-        for (var i = 0; i < results.length; i++) {
-            var result = results[i];
-            if (result.status === 'fulfilled') {
-                if (result.value.videos) {
-                    for (var j = 0; j < result.value.videos.length; j++) {
-                        videos.push(result.value.videos[j]);
-                    }
-                }
-                if (result.value.error) {
-                    errors.push(result.value.feed.name + ': ' + result.value.error);
-                }
-            }
+    const videos = [];
+    const errors = [];
+    
+    const youtubeResults = await Promise.allSettled(
+        YOUTUBE_CHANNELS.map(channel => fetchYouTubeVideo(channel))
+    );
+    
+    youtubeResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+            videos.push(result.value);
+        } else {
+            errors.push(`${YOUTUBE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
         }
-        
-        var sorted = sortByRecency(videos);
-        var limited = limitPerSource(sorted, MAX_PER_SOURCE);
-        
-        res.status(200).json({
-            videos: limited.slice(0, limit),
-            count: limited.length,
-            errors: errors.slice(0, 10),
-            lastUpdated: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message, videos: [] });
-    }
+    });
+    
+    const rumbleResults = await Promise.allSettled(
+        RUMBLE_CHANNELS.map(channel => fetchRumbleVideo(channel))
+    );
+    
+    rumbleResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+            videos.push(result.value);
+        } else {
+            errors.push(`${RUMBLE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
+        }
+    });
+    
+    videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    
+    res.status(200).json({
+        videos: videos,
+        count: videos.length,
+        errors: errors.slice(0, 5),
+        lastUpdated: new Date().toISOString()
+    });
 };
