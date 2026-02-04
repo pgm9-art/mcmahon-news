@@ -1,25 +1,26 @@
 const fetch = require('node-fetch');
 
 // 13 YouTube + 2 Rumble = 15 Video Sources
+// Sorted by subscriber count (highest first)
 const YOUTUBE_CHANNELS = [
-    { id: 'UCGttrUON87gWfU6dMWm1fcA', name: 'Tucker Carlson', handle: 'tuckercarlson' },
-    { id: 'UCjjBjVc0b1cIpNGEeZtS2lg', name: 'TCN', handle: 'tcnetwork' },
-    { id: 'UCDkEYb-TXJVWLvOokshtlsw', name: 'Judge Napolitano', handle: 'judgingfreedom' },
-    { id: 'UCDRIjKy6eZOvKtOELtTdeUA', name: 'Breaking Points', handle: 'breakingpoints' },
-    { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow' },
-    { id: 'UCi5N_uAqApEUIlg32QzkPlg', name: 'Bret Weinstein', handle: 'darkhorsepod' },
-    { id: 'UCEfe80CP2cs1eLRNQazffZw', name: 'Dave Smith', handle: 'partoftheproblem' },
-    { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks' },
-    { id: 'UChzVhAwzGR7hV-4O8ZmBLHg', name: 'Glenn Greenwald', handle: 'glenngreenwald' },
-    { id: 'UCcE1-IiX4fLqbbVjPx0Bnag', name: 'Owen Shroyer', handle: 'owenreport' },
-    { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan' },
-    { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow' },
-    { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996' }
+    { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan', subs: 19000000 },
+    { id: 'UCGttrUON87gWfU6dMWm1fcA', name: 'Tucker Carlson', handle: 'tuckercarlson', subs: 14000000 },
+    { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks', subs: 5000000 },
+    { id: 'UCDRIjKy6eZOvKtOELtTdeUA', name: 'Breaking Points', handle: 'breakingpoints', subs: 2100000 },
+    { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow', subs: 1800000 },
+    { id: 'UCjjBjVc0b1cIpNGEeZtS2lg', name: 'TCN', handle: 'tcnetwork', subs: 1500000 },
+    { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow', subs: 1300000 },
+    { id: 'UCDkEYb-TXJVWLvOokshtlsw', name: 'Judge Napolitano', handle: 'judgingfreedom', subs: 1200000 },
+    { id: 'UCi5N_uAqApEUIlg32QzkPlg', name: 'Bret Weinstein', handle: 'darkhorsepod', subs: 900000 },
+    { id: 'UCEfe80CP2cs1eLRNQazffZw', name: 'Dave Smith', handle: 'partoftheproblem', subs: 400000 },
+    { id: 'UChzVhAwzGR7hV-4O8ZmBLHg', name: 'Glenn Greenwald', handle: 'glenngreenwald', subs: 350000 },
+    { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996', subs: 300000 },
+    { id: 'UCcE1-IiX4fLqbbVjPx0Bnag', name: 'Owen Shroyer', handle: 'owenreport', subs: 60000 }
 ];
 
 const RUMBLE_CHANNELS = [
-    { handle: 'nickjfuentes', name: 'Nick Fuentes' },
-    { handle: 'StewPeters', name: 'Stew Peters' }
+    { handle: 'nickjfuentes', name: 'Nick Fuentes', subs: 500000 },
+    { handle: 'StewPeters', name: 'Stew Peters', subs: 400000 }
 ];
 
 function timeAgo(dateString) {
@@ -75,7 +76,8 @@ async function fetchYouTubeVideo(channel) {
         sourceHandle: channel.handle,
         platform: 'youtube',
         pubDate: published,
-        timeAgo: timeAgo(published)
+        timeAgo: timeAgo(published),
+        subs: channel.subs
     };
 }
 
@@ -116,7 +118,8 @@ async function fetchRumbleVideo(channel) {
         sourceHandle: channel.handle,
         platform: 'rumble',
         pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-        timeAgo: pubDate ? timeAgo(pubDate) : 'recently'
+        timeAgo: pubDate ? timeAgo(pubDate) : 'recently',
+        subs: channel.subs
     };
 }
 
@@ -152,7 +155,8 @@ module.exports = async function(req, res) {
         }
     });
     
-    videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    // Sort by subscriber count (highest first)
+    videos.sort((a, b) => b.subs - a.subs);
     
     res.status(200).json({
         videos: videos,
