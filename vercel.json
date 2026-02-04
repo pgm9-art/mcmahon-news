@@ -1,27 +1,12 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/api/videos",
-      "dest": "/api/videos.js"
-    },
-    {
-      "src": "/api/tweets",
-      "dest": "/api/tweets.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/videos", "dest": "/api/videos.js" },
+    { "src": "/api/tweets", "dest": "/api/tweets.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
