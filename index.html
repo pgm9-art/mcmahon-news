@@ -4,36 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McMahon.News — Independent News Aggregator</title>
-    <meta name="description" content="McMahon.News aggregates independent journalists in one place. Videos and X posts from Tucker Carlson, Glenn Greenwald, Breaking Points, and more.">
-    <meta property="og:title" content="McMahon.News — Independent News">
-    <meta property="og:description" content="100% Independent. Zero Corporate Media.">
-    <meta property="og:image" content="https://mcmahon.news/og-image.png">
-    <link rel="canonical" href="https://mcmahon.news">
+    <meta name="description" content="Independent news aggregator featuring Tucker Carlson, Glenn Greenwald, Breaking Points, Joe Rogan, and more. Zero corporate media.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Georgia&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
             --red: #cc0000;
-            --red-dark: #aa0000;
-            --black: #111111;
-            --white: #ffffff;
-            --gray-100: #f7f7f7;
-            --gray-200: #eeeeee;
-            --gray-300: #dddddd;
-            --gray-500: #888888;
-            --gray-700: #444444;
+            --black: #111;
+            --white: #fff;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-400: #a3a3a3;
+            --gray-600: #525252;
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--gray-100);
             color: var(--black);
-            line-height: 1.5;
         }
         
-        .top-banner {
+        .top-bar {
             background: var(--black);
             color: var(--white);
             text-align: center;
@@ -43,89 +36,65 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
-        .top-banner span { color: var(--red); }
+        .top-bar span { color: var(--red); }
         
         header {
             background: var(--white);
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             border-bottom: 3px solid var(--red);
         }
         
         .logo {
-            font-family: 'Georgia', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 900;
             color: var(--black);
         }
         .logo span { color: var(--red); }
         
         .date-line {
-            color: var(--gray-500);
-            font-size: 0.85rem;
-            margin-top: 5px;
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            margin-top: 4px;
         }
         
         .main-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
         
+        /* Desktop Layout */
         .desktop-layout {
             display: none;
-        }
-        
-        .mobile-layout {
-            display: block;
+            grid-template-columns: 1fr 3fr 1fr;
+            gap: 15px;
         }
         
         @media (min-width: 1024px) {
-            .desktop-layout {
-                display: grid;
-                grid-template-columns: 1fr 1.5fr 1fr;
-                gap: 20px;
-            }
-            .mobile-layout {
-                display: none;
-            }
-        }
-        
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .desktop-layout {
-                display: grid;
-                grid-template-columns: 1.2fr 1fr;
-                gap: 20px;
-            }
-            .mobile-layout {
-                display: none;
-            }
-            .tweets-left {
-                display: none;
-            }
+            .desktop-layout { display: grid; }
+            .mobile-layout { display: none; }
         }
         
         .column {
             background: var(--white);
             border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 12px;
         }
         
         .column-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
             border-bottom: 2px solid var(--gray-200);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .column-header h2 {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         .live-dot {
@@ -138,173 +107,211 @@
         
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
         
         .video-card {
             display: block;
             text-decoration: none;
             color: inherit;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--gray-200);
+            background: #fafafa;
+            border-radius: 6px;
+            overflow: hidden;
+            transition: transform 0.15s;
         }
-        .video-card:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
+        .video-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .video-thumb-wrap {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: var(--gray-200);
         }
         
         .video-thumb {
             width: 100%;
-            aspect-ratio: 16/9;
+            height: 100%;
             object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            background: var(--gray-200);
         }
         
-        .video-card h3 {
-            font-size: 0.95rem;
+        .video-platform {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 9px;
             font-weight: 600;
-            line-height: 1.4;
-            margin-bottom: 6px;
-        }
-        .video-card:hover h3 {
-            color: var(--red);
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
         }
         
-        .video-meta {
-            font-size: 0.8rem;
-            color: var(--gray-500);
+        .video-info {
+            padding: 8px;
         }
-        .video-meta .source {
-            color: var(--red);
+        
+        .video-source {
+            font-size: 0.7rem;
             font-weight: 600;
+            color: var(--red);
+            margin-bottom: 4px;
         }
         
+        .video-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        
+        .video-time {
+            font-size: 0.65rem;
+            color: var(--gray-400);
+        }
+        
+        /* Tweet Card */
         .tweet-card {
             display: block;
             text-decoration: none;
             color: inherit;
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 10px;
             border-radius: 6px;
             border: 1px solid var(--gray-200);
-            transition: all 0.2s ease;
+            margin-bottom: 8px;
+            transition: border-color 0.15s;
         }
         .tweet-card:hover {
             border-color: var(--red);
-            background: var(--gray-100);
         }
         
-        .tweet-card h3 {
-            font-size: 0.9rem;
-            font-weight: 500;
-            line-height: 1.4;
-            margin-bottom: 8px;
-        }
-        
-        .tweet-meta {
+        .tweet-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.75rem;
-            color: var(--gray-500);
+            margin-bottom: 6px;
         }
-        .tweet-meta .source {
+        
+        .tweet-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
             color: var(--red);
+            flex-shrink: 0;
+        }
+        
+        .tweet-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .tweet-name {
+            font-size: 0.8rem;
             font-weight: 600;
         }
-        .tweet-meta .x-icon {
-            width: 14px;
-            height: 14px;
+        
+        .tweet-handle {
+            font-size: 0.7rem;
+            color: var(--gray-400);
+        }
+        
+        .tweet-text {
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--gray-600);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .tweet-time {
+            font-size: 0.65rem;
+            color: var(--gray-400);
+        }
+        
+        /* Mobile Layout */
+        .mobile-layout { display: block; }
+        
+        @media (min-width: 1024px) {
+            .mobile-layout { display: none; }
         }
         
         .mobile-tabs {
             display: flex;
-            position: sticky;
-            top: 0;
-            z-index: 100;
             background: var(--white);
-            border-bottom: 2px solid var(--gray-200);
-            margin-bottom: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
         }
         
         .mobile-tab {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
-            font-weight: 600;
             font-size: 0.9rem;
-            cursor: pointer;
+            font-weight: 600;
             border: none;
-            background: none;
-            color: var(--gray-500);
-            transition: all 0.2s ease;
+            background: var(--white);
+            color: var(--gray-400);
+            cursor: pointer;
         }
         .mobile-tab.active {
             color: var(--red);
-            border-bottom: 3px solid var(--red);
-            margin-bottom: -2px;
+            box-shadow: inset 0 -2px 0 var(--red);
         }
         
-        .mobile-content {
-            display: none;
+        .mobile-content { display: none; }
+        .mobile-content.active { display: block; }
+        
+        .mobile-video-list .video-grid {
+            grid-template-columns: 1fr;
         }
-        .mobile-content.active {
-            display: block;
+        
+        footer {
+            background: var(--black);
+            color: var(--gray-400);
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 0.75rem;
         }
         
         .loading {
             text-align: center;
-            padding: 40px;
-            color: var(--gray-500);
-        }
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--gray-300);
-            border-top-color: var(--red);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            padding: 30px;
+            color: var(--gray-400);
         }
         
         .error {
             text-align: center;
             padding: 20px;
             color: var(--red);
-            font-size: 0.9rem;
-        }
-        
-        footer {
-            background: var(--black);
-            color: var(--gray-500);
-            text-align: center;
-            padding: 30px 20px;
-            margin-top: 40px;
-        }
-        footer .tagline {
-            font-style: italic;
-            color: var(--white);
-            margin-bottom: 10px;
-        }
-        footer small {
-            font-size: 0.75rem;
         }
     </style>
 </head>
 <body>
-    <div class="top-banner">
-        100% <span>INDEPENDENT</span>. ZERO CORPORATE MEDIA.
-    </div>
+    <div class="top-bar">100% <span>Independent</span>. Zero Corporate Media.</div>
     
     <header>
         <div class="logo">McMahon<span>.NEWS</span></div>
@@ -312,212 +319,157 @@
     </header>
     
     <main class="main-container">
+        <!-- Desktop -->
         <div class="desktop-layout">
-            <div class="column tweets-left">
+            <div class="column">
                 <div class="column-header">
-                    <svg class="x-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    <span>𝕏</span>
                     <h2>X Posts</h2>
                     <div class="live-dot"></div>
                 </div>
-                <div id="tweetsLeft" class="loading">Loading posts</div>
+                <div id="tweetsLeft" class="loading">Loading...</div>
             </div>
             
-            <div class="column videos-center">
+            <div class="column">
                 <div class="column-header">
-                    <span style="font-size: 18px;">📺</span>
+                    <span>📺</span>
                     <h2>Latest Videos</h2>
                     <div class="live-dot"></div>
                 </div>
-                <div id="videosCenter" class="loading">Loading videos</div>
+                <div id="videosCenter" class="video-grid loading">Loading...</div>
             </div>
             
-            <div class="column tweets-right">
+            <div class="column">
                 <div class="column-header">
-                    <svg class="x-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    <span>𝕏</span>
                     <h2>X Posts</h2>
                     <div class="live-dot"></div>
                 </div>
-                <div id="tweetsRight" class="loading">Loading posts</div>
+                <div id="tweetsRight" class="loading">Loading...</div>
             </div>
         </div>
         
+        <!-- Mobile -->
         <div class="mobile-layout">
             <div class="mobile-tabs">
                 <button class="mobile-tab active" data-tab="videos">📺 Videos</button>
-                <button class="mobile-tab" data-tab="tweets">𝕏 Posts</button>
+                <button class="mobile-tab" data-tab="posts">𝕏 Posts</button>
             </div>
-            <div id="mobileVideos" class="mobile-content active">
-                <div id="videosMobile" class="loading">Loading videos</div>
+            <div id="mobileVideos" class="mobile-content active mobile-video-list">
+                <div id="videosMobile" class="video-grid loading">Loading...</div>
             </div>
-            <div id="mobileTweets" class="mobile-content">
-                <div id="tweetsMobile" class="loading">Loading posts</div>
+            <div id="mobilePosts" class="mobile-content">
+                <div id="tweetsMobile" class="loading">Loading...</div>
             </div>
         </div>
     </main>
     
     <footer>
-        <p class="tagline">"The news they don't want you to see."</p>
-        <small>&copy; 2025 McMahon.News — Independent News Aggregation</small>
+        <div>McMahon.News — Independent News Aggregation</div>
+        <div style="margin-top:8px">Last updated: <span id="lastUpdated">--</span></div>
     </footer>
     
     <script>
-        (function() {
-            // Set date
-            var dateEl = document.getElementById('dateLine');
-            if (dateEl) {
-                dateEl.textContent = new Date().toLocaleDateString('en-US', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    (function() {
+        document.getElementById('dateLine').textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        
+        document.querySelectorAll('.mobile-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.mobile-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.mobile-content').forEach(function(c) { c.classList.remove('active'); });
+                this.classList.add('active');
+                document.getElementById('mobile' + (this.dataset.tab === 'videos' ? 'Videos' : 'Posts')).classList.add('active');
+            });
+        });
+        
+        function renderVideos(videos, containerId) {
+            var container = document.getElementById(containerId);
+            if (!videos || !videos.length) {
+                container.innerHTML = '<div class="error">No videos available</div>';
+                container.classList.remove('loading');
+                return;
+            }
+            
+            container.innerHTML = videos.map(function(v) {
+                return '<a href="' + v.url + '" target="_blank" class="video-card">' +
+                    '<div class="video-thumb-wrap">' +
+                    '<img class="video-thumb" src="' + (v.thumbnail || '') + '" alt="" loading="lazy">' +
+                    '<span class="video-platform">' + v.platform + '</span>' +
+                    '</div>' +
+                    '<div class="video-info">' +
+                    '<div class="video-source">' + v.source + '</div>' +
+                    '<div class="video-title">' + v.title + '</div>' +
+                    '<div class="video-time">' + v.timeAgo + '</div>' +
+                    '</div></a>';
+            }).join('');
+            container.classList.remove('loading');
+        }
+        
+        function renderTweets(tweets, containerId) {
+            var container = document.getElementById(containerId);
+            if (!tweets || !tweets.length) {
+                container.innerHTML = '<div class="error">No posts available</div>';
+                container.classList.remove('loading');
+                return;
+            }
+            
+            container.innerHTML = tweets.map(function(t) {
+                var initial = t.source.charAt(0);
+                var avatarContent = t.profileImage 
+                    ? '<img src="' + t.profileImage + '" alt="" onerror="this.parentElement.innerHTML=\'' + initial + '\'">'
+                    : initial;
+                
+                return '<a href="' + t.url + '" target="_blank" class="tweet-card">' +
+                    '<div class="tweet-header">' +
+                    '<div class="tweet-avatar">' + avatarContent + '</div>' +
+                    '<div><div class="tweet-name">' + t.source + '</div>' +
+                    '<div class="tweet-handle">@' + t.sourceHandle + '</div></div>' +
+                    '</div>' +
+                    '<div class="tweet-text">' + t.text + '</div>' +
+                    '<div class="tweet-time">' + t.timeAgo + '</div>' +
+                    '</a>';
+            }).join('');
+            container.classList.remove('loading');
+        }
+        
+        function loadData() {
+            fetch('/api/videos')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.videos) {
+                        renderVideos(data.videos, 'videosCenter');
+                        renderVideos(data.videos, 'videosMobile');
+                    }
+                    if (data.lastUpdated) {
+                        document.getElementById('lastUpdated').textContent = new Date(data.lastUpdated).toLocaleTimeString();
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('videosCenter').innerHTML = '<div class="error">Failed to load</div>';
+                    document.getElementById('videosMobile').innerHTML = '<div class="error">Failed to load</div>';
                 });
-            }
             
-            // Mobile tab switching
-            var tabs = document.querySelectorAll('.mobile-tab');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].addEventListener('click', function(e) {
-                    var allTabs = document.querySelectorAll('.mobile-tab');
-                    var allContent = document.querySelectorAll('.mobile-content');
-                    for (var j = 0; j < allTabs.length; j++) {
-                        allTabs[j].classList.remove('active');
+            fetch('/api/tweets')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.tweets) {
+                        renderTweets(data.tweets.slice(0, 9), 'tweetsLeft');
+                        renderTweets(data.tweets.slice(9, 18), 'tweetsRight');
+                        renderTweets(data.tweets, 'tweetsMobile');
                     }
-                    for (var k = 0; k < allContent.length; k++) {
-                        allContent[k].classList.remove('active');
-                    }
-                    e.target.classList.add('active');
-                    var tabName = e.target.getAttribute('data-tab');
-                    var contentId = 'mobile' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
-                    var contentEl = document.getElementById(contentId);
-                    if (contentEl) {
-                        contentEl.classList.add('active');
-                    }
+                })
+                .catch(function() {
+                    document.getElementById('tweetsLeft').innerHTML = '<div class="error">Failed to load</div>';
+                    document.getElementById('tweetsRight').innerHTML = '<div class="error">Failed to load</div>';
+                    document.getElementById('tweetsMobile').innerHTML = '<div class="error">Failed to load</div>';
                 });
-            }
-            
-            function renderVideos(videos, containerId) {
-                var container = document.getElementById(containerId);
-                if (!container) {
-                    console.error('Container not found: ' + containerId);
-                    return;
-                }
-                if (!videos || videos.length === 0) {
-                    container.innerHTML = '<p class="error">No videos available</p>';
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < videos.length; i++) {
-                    var v = videos[i];
-                    var imgSrc = v.imageUrl || 'https://via.placeholder.com/320x180?text=Video';
-                    html += '<a href="' + v.url + '" target="_blank" rel="noopener" class="video-card">';
-                    html += '<img src="' + imgSrc + '" alt="" class="video-thumb" loading="lazy">';
-                    html += '<h3>' + v.headline + '</h3>';
-                    html += '<div class="video-meta">';
-                    html += '<span class="source">' + v.source + '</span> • ' + v.timeAgo;
-                    html += '</div></a>';
-                }
-                container.innerHTML = html;
-            }
-            
-            function renderTweets(tweets, containerId) {
-                var container = document.getElementById(containerId);
-                if (!container) {
-                    console.error('Container not found: ' + containerId);
-                    return;
-                }
-                if (!tweets || tweets.length === 0) {
-                    container.innerHTML = '<p class="error">No posts available</p>';
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < tweets.length; i++) {
-                    var t = tweets[i];
-                    var handle = t.sourceHandle || t.source;
-                    html += '<a href="' + t.url + '" target="_blank" rel="noopener" class="tweet-card">';
-                    html += '<h3>' + t.headline + '</h3>';
-                    html += '<div class="tweet-meta">';
-                    html += '<svg class="x-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-                    html += '<span class="source">@' + handle + '</span>';
-                    html += '<span>• ' + t.timeAgo + '</span>';
-                    html += '</div></a>';
-                }
-                container.innerHTML = html;
-            }
-            
-            function loadVideos() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/api/videos', true);
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                console.log('Videos loaded:', data.videos ? data.videos.length : 0);
-                                if (data.videos && data.videos.length > 0) {
-                                    renderVideos(data.videos, 'videosCenter');
-                                    renderVideos(data.videos, 'videosMobile');
-                                } else {
-                                    document.getElementById('videosCenter').innerHTML = '<p class="error">No videos available</p>';
-                                    document.getElementById('videosMobile').innerHTML = '<p class="error">No videos available</p>';
-                                }
-                            } catch (e) {
-                                console.error('Video parse error:', e);
-                                document.getElementById('videosCenter').innerHTML = '<p class="error">Error loading videos</p>';
-                                document.getElementById('videosMobile').innerHTML = '<p class="error">Error loading videos</p>';
-                            }
-                        } else {
-                            console.error('Video fetch error:', xhr.status);
-                            document.getElementById('videosCenter').innerHTML = '<p class="error">Failed to load videos</p>';
-                            document.getElementById('videosMobile').innerHTML = '<p class="error">Failed to load videos</p>';
-                        }
-                    }
-                };
-                xhr.send();
-            }
-            
-            function loadTweets() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/api/tweets', true);
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                console.log('Tweets loaded:', data.tweets ? data.tweets.length : 0);
-                                if (data.tweets && data.tweets.length > 0) {
-                                    var half = Math.ceil(data.tweets.length / 2);
-                                    renderTweets(data.tweets.slice(0, half), 'tweetsLeft');
-                                    renderTweets(data.tweets.slice(half), 'tweetsRight');
-                                    renderTweets(data.tweets, 'tweetsMobile');
-                                } else {
-                                    document.getElementById('tweetsLeft').innerHTML = '<p class="error">No posts available</p>';
-                                    document.getElementById('tweetsRight').innerHTML = '<p class="error">No posts available</p>';
-                                    document.getElementById('tweetsMobile').innerHTML = '<p class="error">No posts available</p>';
-                                }
-                            } catch (e) {
-                                console.error('Tweet parse error:', e);
-                                document.getElementById('tweetsLeft').innerHTML = '<p class="error">Error loading posts</p>';
-                                document.getElementById('tweetsRight').innerHTML = '<p class="error">Error loading posts</p>';
-                                document.getElementById('tweetsMobile').innerHTML = '<p class="error">Error loading posts</p>';
-                            }
-                        } else {
-                            console.error('Tweet fetch error:', xhr.status);
-                            document.getElementById('tweetsLeft').innerHTML = '<p class="error">Failed to load posts</p>';
-                            document.getElementById('tweetsRight').innerHTML = '<p class="error">Failed to load posts</p>';
-                            document.getElementById('tweetsMobile').innerHTML = '<p class="error">Failed to load posts</p>';
-                        }
-                    }
-                };
-                xhr.send();
-            }
-            
-            // Load content on page load
-            loadVideos();
-            loadTweets();
-            
-            // Refresh every 5 minutes
-            setInterval(function() {
-                loadVideos();
-                loadTweets();
-            }, 300000);
-        })();
+        }
+        
+        loadData();
+        setInterval(loadData, 30 * 60 * 1000);
+    })();
     </script>
 </body>
 </html>
