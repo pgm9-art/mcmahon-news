@@ -25,29 +25,28 @@ const X_ACCOUNTS = [
     { handle: 'ggreenwald', name: 'Glenn Greenwald' },
     { handle: 'NickJFuentes', name: 'Nick Fuentes' },
     { handle: 'OwenShroyer1776', name: 'Owen Shroyer' },
-    { handle: 'shellenberger', name: 'Michael Shellenberger' },
-    { handle: 'Judgenap', name: 'Judge Napolitano' },
-    { handle: 'AFpost', name: 'AF Post' },
+    { handle: 'JudgeNap', name: 'Judge Napolitano' },
     { handle: 'BreakingPoints', name: 'Breaking Points' },
-    { handle: 'DropsiteNews', name: 'Drop Site News' },
-    { handle: 'ComicDaveSmith', name: 'Dave Smith' },
+    { handle: 'jimmy_dore', name: 'Jimmy Dore' },
     { handle: 'BretWeinstein', name: 'Bret Weinstein' },
+    { handle: 'ComicDaveSmith', name: 'Dave Smith' },
     { handle: 'TheGrayzoneNews', name: 'The Grayzone' },
-    { handle: 'VigilantFox', name: 'Vigilant Fox' },
-    { handle: 'MarioNawfal', name: 'Mario Nawfal' },
-    { handle: 'jimmy_dore', name: 'Jimmy Dore' }
+    { handle: 'TheYoungTurks', name: 'The Young Turks' },
+    { handle: 'DropSiteNews', name: 'Drop Site News' },
+    { handle: 'MaxBlumenthal', name: 'Max Blumenthal' },
+    { handle: 'AasaWitteveen', name: 'Aasa Witteveen' },
+    { handle: 'RealAlexJones', name: 'Alex Jones' }
 ];
 
-// === VIDEO FEEDS - VERIFIED YOUTUBE CHANNEL IDs ===
 const VIDEO_FEEDS = [
     { name: 'Tucker Carlson', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjjBjVc0b1cIpNGEeZtS2lg' },
-    { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDkEYb-TXJVWLvOokshtlsw' },
-    { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDRIjKy6eZOvKtOELtTdeUA' },
-    { name: 'Jimmy Dore', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC3M7l8ved_rYQ45AVzS0RGA' },
+    { name: 'Judge Napolitano', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDkEYb-TXJVWLv0okshtlsw' },
+    { name: 'Breaking Points', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCDRIjKy6eZ0vKt0ELtTdeUA' },
+    { name: 'Jimmy Dore', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC3M718ved_rYQ45AVzS0RGA' },
     { name: 'Bret Weinstein', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCi5N_uAqApEUIlg32QzkPlg' },
     { name: 'Dave Smith', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCEfe80CP2cs1eLRNQazffZw' },
     { name: 'The Grayzone', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCEXR8pRTkE2vFeJePNe9UcQ' },
-    { name: 'Glenn Greenwald', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UChzVhAwzGR7hV-4O8ZmBLHg' },
+    { name: 'Glenn Greenwald', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UChzVhAwzGR7hV-408ZmBLHg' },
     { name: 'The Young Turks', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1yBKRuGpC1tSM73A0ZjYjQ' },
     { name: 'Owen Shroyer', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC-hW9CchHhAEZNfPgkMpysg' },
     { name: 'Nick Fuentes', url: 'https://openrss.org/rumble.com/c/NickJFuentes', platform: 'rumble' }
@@ -76,19 +75,12 @@ function getVideoThumbnail(item, feed) {
     
     if (item.mediaGroup && item.mediaGroup['media:thumbnail']) {
         const thumb = item.mediaGroup['media:thumbnail'];
-        if (Array.isArray(thumb) && thumb[0] && thumb[0].$.url) {
+        if (Array.isArray(thumb) && thumb[0] && thumb[0].$) {
             return thumb[0].$.url;
         }
-        if (thumb && thumb.$ && thumb.$.url) {
+        if (thumb && thumb.$) {
             return thumb.$.url;
         }
-    }
-    
-    if (item.enclosure?.url) return item.enclosure.url;
-    
-    if (item.content) {
-        const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-        if (imgMatch) return imgMatch[1];
     }
     
     return null;
@@ -112,60 +104,61 @@ async function fetchXPosts() {
         fetchErrors.push('No X Bearer Token');
         return [];
     }
-
+    
     const stories = [];
     const successfulAccounts = [];
     const failedAccounts = [];
-
+    
     for (const account of X_ACCOUNTS) {
         try {
             const userResponse = await fetch(
                 `https://api.twitter.com/2/users/by/username/${account.handle}`,
                 { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
             );
-
+            
             if (!userResponse.ok) {
                 const errorText = await userResponse.text();
-                failedAccounts.push(`${account.handle}: User lookup failed (${userResponse.status}) - ${errorText.substring(0, 100)}`);
+                failedAccounts.push(`${account.handle}: User fetch failed (${userResponse.status}) - ${errorText.substring(0, 100)}`);
                 continue;
             }
-
+            
             const userData = await userResponse.json();
-            if (!userData.data) {
+            
+            if (!userData.data || !userData.data.id) {
                 failedAccounts.push(`${account.handle}: No user data returned`);
                 continue;
             }
-
+            
             const userId = userData.data.id;
-
+            
             const tweetsResponse = await fetch(
                 `https://api.twitter.com/2/users/${userId}/tweets?max_results=5&tweet.fields=created_at,public_metrics&exclude=retweets,replies`,
                 { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
             );
-
+            
             if (!tweetsResponse.ok) {
                 const errorText = await tweetsResponse.text();
                 failedAccounts.push(`${account.handle}: Tweets fetch failed (${tweetsResponse.status}) - ${errorText.substring(0, 100)}`);
                 continue;
             }
-
+            
             const tweetsData = await tweetsResponse.json();
-
+            
             if (tweetsData.data && tweetsData.data.length > 0) {
                 successfulAccounts.push(account.handle);
                 
                 for (const tweet of tweetsData.data) {
                     if (!isNewsContent(tweet.text)) continue;
                     if (tweet.text.length < 30) continue;
-
+                    
                     let headline = tweet.text.split('\n')[0];
                     if (headline.length > 200) {
                         headline = headline.substring(0, 197) + '...';
                     }
-
-                    const engagement = tweet.public_metrics ? 
+                    
+                    const engagement = tweet.public_metrics ?
                         (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2 + tweet.public_metrics.reply_count) : 0;
-
+                    
                     stories.push({
                         headline,
                         url: `https://x.com/${account.handle}/status/${tweet.id}`,
@@ -175,20 +168,14 @@ async function fetchXPosts() {
                         timeAgo: timeAgo(tweet.created_at),
                         type: 'tweet',
                         engagement,
-                        trending: engagement > 500
                     });
                 }
-            } else {
-                failedAccounts.push(`${account.handle}: No tweets returned`);
             }
-
-            await new Promise(resolve => setTimeout(resolve, 200));
-
         } catch (error) {
             failedAccounts.push(`${account.handle}: ${error.message}`);
         }
     }
-
+    
     console.log(`X API: ${successfulAccounts.length}/15 accounts succeeded`);
     console.log(`Successful: ${successfulAccounts.join(', ')}`);
     if (failedAccounts.length > 0) {
@@ -196,7 +183,7 @@ async function fetchXPosts() {
         failedAccounts.forEach(f => console.log(`- ${f}`));
         fetchErrors.push(...failedAccounts);
     }
-
+    
     return stories;
 }
 
@@ -204,20 +191,20 @@ async function fetchVideoFeeds() {
     const videos = [];
     const successfulFeeds = [];
     const failedFeeds = [];
-
+    
     for (const feed of VIDEO_FEEDS) {
         try {
             const parsed = await parser.parseURL(feed.url);
-
+            
             if (parsed.items && parsed.items.length > 0) {
                 successfulFeeds.push(feed.name);
                 
                 for (const item of parsed.items.slice(0, 3)) {
                     if (!isNewsContent(item.title)) continue;
-
+                    
                     const thumbnail = getVideoThumbnail(item, feed);
                     const pubDate = item.pubDate || item.isoDate || new Date().toISOString();
-
+                    
                     videos.push({
                         headline: item.title,
                         url: item.link,
@@ -229,14 +216,13 @@ async function fetchVideoFeeds() {
                         platform: feed.platform || 'youtube'
                     });
                 }
-            } else {
-                failedFeeds.push(`${feed.name}: No items in feed`);
             }
         } catch (error) {
-            failedFeeds.push(`${feed.name}: ${error.message}`);
+            failedFeeds.push(feed.name);
+            console.log(`Feed error (${feed.name}): ${error.message}`);
         }
     }
-
+    
     console.log(`Video feeds: ${successfulFeeds.length}/${VIDEO_FEEDS.length} succeeded`);
     console.log(`Successful: ${successfulFeeds.join(', ')}`);
     if (failedFeeds.length > 0) {
@@ -244,7 +230,7 @@ async function fetchVideoFeeds() {
         failedFeeds.forEach(f => console.log(`- ${f}`));
         fetchErrors.push(...failedFeeds);
     }
-
+    
     return videos;
 }
 
@@ -262,72 +248,66 @@ function limitPerSource(items, max) {
 }
 
 async function refreshStories() {
-    console.log('========================================');
+    console.log('==========================================');
     console.log('REFRESHING STORIES - ' + new Date().toISOString());
-    console.log('========================================');
+    console.log('==========================================');
     fetchErrors = [];
-
+    
     try {
         const [xPosts, videos] = await Promise.all([
             fetchXPosts(),
             fetchVideoFeeds()
         ]);
-
+        
         const sortedTweets = sortByRecency(xPosts);
         const sortedVideos = sortByRecency(videos);
-
+        
         cachedTweets = limitPerSource(sortedTweets, MAX_PER_SOURCE);
         cachedVideos = limitPerSource(sortedVideos, MAX_PER_SOURCE);
-
-        lastFetch = new Date();
-
-        console.log('========================================');
-        console.log(`FINAL CACHE: ${cachedTweets.length} tweets, ${cachedVideos.length} videos`);
-        console.log(`Tweet sources: ${[...new Set(cachedTweets.map(t => t.source))].join(', ')}`);
-        console.log(`Video sources: ${[...new Set(cachedVideos.map(v => v.source))].join(', ')}`);
-        console.log('========================================');
-
+        lastFetch = new Date().toISOString();
+        
+        console.log(`Cached ${cachedTweets.length} tweets, ${cachedVideos.length} videos`);
     } catch (error) {
-        console.error('Fatal refresh error:', error);
+        console.log(`Fatal refresh error: ${error.message}`);
         fetchErrors.push(`Fatal: ${error.message}`);
     }
 }
 
 app.get('/api/tweets', (req, res) => {
     const limit = parseInt(req.query.limit) || 30;
-    res.json({ 
-        tweets: cachedTweets.slice(0, limit), 
-        lastUpdated: lastFetch, 
-        count: cachedTweets.length 
+    res.json({
+        tweets: cachedTweets.slice(0, limit),
+        lastUpdated: lastFetch,
+        count: cachedTweets.length
     });
 });
 
 app.get('/api/videos', (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
-    res.json({ 
-        videos: cachedVideos.slice(0, limit), 
-        lastUpdated: lastFetch, 
-        count: cachedVideos.length 
+    res.json({
+        videos: cachedVideos.slice(0, limit),
+        lastUpdated: lastFetch,
+        count: cachedVideos.length
     });
 });
 
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
+    res.json({
+        status: 'ok',
         tweets: cachedTweets.length,
         tweetSources: [...new Set(cachedTweets.map(t => t.source))],
         videos: cachedVideos.length,
         videoSources: [...new Set(cachedVideos.map(v => v.source))],
         lastFetch,
         errors: fetchErrors.slice(0, 30),
-        uptime: process.uptime() 
+        uptime: process.uptime()
     });
 });
 
 app.get('/api/refresh', async (req, res) => {
     await refreshStories();
-    res.json({ 
-        success: true, 
+    res.json({
+        success: true,
         tweets: cachedTweets.length,
         tweetSources: [...new Set(cachedTweets.map(t => t.source))],
         videos: cachedVideos.length,
@@ -340,10 +320,15 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Initial data load
 refreshStories().then(() => {
-    app.listen(PORT, () => { 
-        console.log(`McMahon.News running on port ${PORT}`); 
+    app.listen(PORT, () => {
+        console.log(`McMahon.News running on port ${PORT}`);
     });
 });
 
+// Refresh every 15 minutes
 setInterval(refreshStories, 15 * 60 * 1000);
+
+// CRITICAL: Export the app for Vercel serverless functions
+module.exports = app;
