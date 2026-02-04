@@ -454,9 +454,17 @@
             fetch('/api/tweets')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.tweets) {
+                    // Use pre-sorted left/right arrays from API (zigzag by follower count)
+                    if (data.left && data.right) {
+                        renderTweets(data.left, 'tweetsLeft');
+                        renderTweets(data.right, 'tweetsRight');
+                    } else if (data.tweets) {
+                        // Fallback: split in half
                         renderTweets(data.tweets.slice(0, 9), 'tweetsLeft');
                         renderTweets(data.tweets.slice(9, 18), 'tweetsRight');
+                    }
+                    // Mobile gets all tweets sorted by followers
+                    if (data.tweets) {
                         renderTweets(data.tweets, 'tweetsMobile');
                     }
                 })
