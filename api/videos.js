@@ -2,7 +2,7 @@ const RSSParser = require('rss-parser');
 
 const parser = new RSSParser({
     customFields: {
-        item: [['media:group', 'mediaGroup']]
+        item: [['media:group', 'mediaGroup'], ['media:thumbnail', 'mediaThumbnail']]
     }
 });
 
@@ -25,27 +25,53 @@ const NON_NEWS_FILTERS = ['subscribe', 'join us', 'live stream starting', 'going
 
 function isNewsContent(headline) {
     if (!headline) return false;
-    const lower = headline.toLowerCase();
-    return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
+    var lower = headline.toLowerCase();
+    for (var i = 0; i < NON_NEWS_FILTERS.length; i++) {
+        if (lower.indexOf(NON_NEWS_FILTERS[i]) !== -1) return false;
+    }
+    return true;
 }
 
-function getVideoThumbnail(item) {
+function getVideoThumbnail(item, platform, feedName) {
+    // Try YouTube thumbnail from link
     if (item.link) {
-        const match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-        if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+        var match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+        if (match) return 'https://img.youtube.com/vi/' + match[1] + '/hqdefault.jpg';
     }
+    
+    // Try media:group thumbnail
     if (item.mediaGroup && item.mediaGroup['media:thumbnail']) {
-        const thumb = item.mediaGroup['media:thumbnail'];
+        var thumb = item.mediaGroup['media:thumbnail'];
         if (Array.isArray(thumb) && thumb[0] && thumb[0].$) return thumb[0].$.url;
         if (thumb && thumb.$) return thumb.$.url;
     }
+    
+    // Try media:thumbnail directly
+    if (item.mediaThumbnail) {
+        if (Array.isArray(item.mediaThumbnail) && item.mediaThumbnail[0]) {
+            if (item.mediaThumbnail[0].$ && item.mediaThumbnail[0].$.url) return item.mediaThumbnail[0].$.url;
+            if (typeof item.mediaThumbnail[0] === 'string') return item.mediaThumbnail[0];
+        }
+        if (item.mediaThumbnail.$ && item.mediaThumbnail.$.url) return item.mediaThumbnail.$.url;
+    }
+    
+    // Try enclosure
+    if (item.enclosure && item.enclosure.url && item.enclosure.type && item.enclosure.type.indexOf('image') !== -1) {
+        return item.enclosure.url;
+    }
+    
+    // Rumble fallback - use a placeholder with channel branding
+    if (platform === 'rumble') {
+        return 'https://placehold.co/640x360/1a1a2e/ffffff?text=' + encodeURIComponent(feedName);
+    }
+    
     return null;
 }
 
 function timeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now - date) / 1000);
+    var now = new Date();
+    var date = new Date(dateString);
+    var seconds = Math.floor((now - date) / 1000);
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
@@ -54,45 +80,51 @@ function timeAgo(dateString) {
 }
 
 function sortByRecency(items) {
-    return items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    return items.sort(function(a, b) {
+        return new Date(b.pubDate) - new Date(a.pubDate);
+    });
 }
 
 function limitPerSource(items, max) {
-    const counts = {};
-    return items.filter(item => {
-        const src = item.source.toLowerCase();
+    var counts = {};
+    return items.filter(function(item) {
+        var src = item.source.toLowerCase();
         counts[src] = (counts[src] || 0) + 1;
         return counts[src] <= max;
     });
 }
 
-module.exports = async (req, res) => {
+module.exports = async function(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     
     try {
-        const limit = parseInt(req.query.limit) || 20;
-        const videos = [];
-        const errors = [];
+        var limit = parseInt(req.query.limit) || 20;
+        var videos = [];
+        var errors = [];
         
-        const results = await Promise.allSettled(
-            VIDEO_FEEDS.map(async (feed) => {
+        var results = await Promise.allSettled(
+            VIDEO_FEEDS.map(async function(feed) {
                 try {
-                    const parsed = await parser.parseURL(feed.url);
+                    var parsed = await parser.parseURL(feed.url);
                     if (parsed.items && parsed.items.length > 0) {
-                        const feedVideos = [];
-                        for (const item of parsed.items.slice(0, 5)) {
+                        var feedVideos = [];
+                        var items = parsed.items.slice(0, 5);
+                        for (var i = 0; i < items.length; i++) {
+                            var item = items[i];
                             if (!isNewsContent(item.title)) continue;
-                            const pubDate = item.pubDate || item.isoDate || new Date().toISOString();
+                            var pubDate = item.pubDate || item.isoDate || new Date().toISOString();
+                            var platform = feed.platform || 'youtube';
                             feedVideos.push({
                                 headline: item.title,
                                 url: item.link,
                                 source: feed.name,
                                 pubDate: pubDate,
                                 timeAgo: timeAgo(pubDate),
-                                imageUrl: getVideoThumbnail(item),
+                                imageUrl: getVideoThumbnail(item, platform, feed.name),
                                 type: 'video',
-                                platform: feed.platform || 'youtube'
+                                platform: platform
                             });
                         }
                         return { feed: feed, videos: feedVideos };
@@ -104,15 +136,22 @@ module.exports = async (req, res) => {
             })
         );
         
-        for (const result of results) {
+        for (var i = 0; i < results.length; i++) {
+            var result = results[i];
             if (result.status === 'fulfilled') {
-                if (result.value.videos) videos.push(...result.value.videos);
-                if (result.value.error) errors.push(result.value.feed.name + ': ' + result.value.error);
+                if (result.value.videos) {
+                    for (var j = 0; j < result.value.videos.length; j++) {
+                        videos.push(result.value.videos[j]);
+                    }
+                }
+                if (result.value.error) {
+                    errors.push(result.value.feed.name + ': ' + result.value.error);
+                }
             }
         }
         
-        const sorted = sortByRecency(videos);
-        const limited = limitPerSource(sorted, MAX_PER_SOURCE);
+        var sorted = sortByRecency(videos);
+        var limited = limitPerSource(sorted, MAX_PER_SOURCE);
         
         res.status(200).json({
             videos: limited.slice(0, limit),
