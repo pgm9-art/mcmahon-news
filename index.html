@@ -346,4 +346,178 @@
                 <button class="mobile-tab active" data-tab="videos">📺 Videos</button>
                 <button class="mobile-tab" data-tab="tweets">𝕏 Posts</button>
             </div>
-            <div id="mobileVide
+            <div id="mobileVideos" class="mobile-content active">
+                <div id="videosMobile" class="loading">Loading videos</div>
+            </div>
+            <div id="mobileTweets" class="mobile-content">
+                <div id="tweetsMobile" class="loading">Loading posts</div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p class="tagline">"The news they don't want you to see."</p>
+        <small>&copy; 2025 McMahon.News — Independent News Aggregation</small>
+    </footer>
+    
+    <script>
+        (function() {
+            // Set date
+            var dateEl = document.getElementById('dateLine');
+            if (dateEl) {
+                dateEl.textContent = new Date().toLocaleDateString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+            }
+            
+            // Mobile tab switching
+            var tabs = document.querySelectorAll('.mobile-tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].addEventListener('click', function(e) {
+                    var allTabs = document.querySelectorAll('.mobile-tab');
+                    var allContent = document.querySelectorAll('.mobile-content');
+                    for (var j = 0; j < allTabs.length; j++) {
+                        allTabs[j].classList.remove('active');
+                    }
+                    for (var k = 0; k < allContent.length; k++) {
+                        allContent[k].classList.remove('active');
+                    }
+                    e.target.classList.add('active');
+                    var tabName = e.target.getAttribute('data-tab');
+                    var contentId = 'mobile' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+                    var contentEl = document.getElementById(contentId);
+                    if (contentEl) {
+                        contentEl.classList.add('active');
+                    }
+                });
+            }
+            
+            function renderVideos(videos, containerId) {
+                var container = document.getElementById(containerId);
+                if (!container) {
+                    console.error('Container not found: ' + containerId);
+                    return;
+                }
+                if (!videos || videos.length === 0) {
+                    container.innerHTML = '<p class="error">No videos available</p>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < videos.length; i++) {
+                    var v = videos[i];
+                    var imgSrc = v.imageUrl || 'https://via.placeholder.com/320x180?text=Video';
+                    html += '<a href="' + v.url + '" target="_blank" rel="noopener" class="video-card">';
+                    html += '<img src="' + imgSrc + '" alt="" class="video-thumb" loading="lazy">';
+                    html += '<h3>' + v.headline + '</h3>';
+                    html += '<div class="video-meta">';
+                    html += '<span class="source">' + v.source + '</span> • ' + v.timeAgo;
+                    html += '</div></a>';
+                }
+                container.innerHTML = html;
+            }
+            
+            function renderTweets(tweets, containerId) {
+                var container = document.getElementById(containerId);
+                if (!container) {
+                    console.error('Container not found: ' + containerId);
+                    return;
+                }
+                if (!tweets || tweets.length === 0) {
+                    container.innerHTML = '<p class="error">No posts available</p>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < tweets.length; i++) {
+                    var t = tweets[i];
+                    var handle = t.sourceHandle || t.source;
+                    html += '<a href="' + t.url + '" target="_blank" rel="noopener" class="tweet-card">';
+                    html += '<h3>' + t.headline + '</h3>';
+                    html += '<div class="tweet-meta">';
+                    html += '<svg class="x-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+                    html += '<span class="source">@' + handle + '</span>';
+                    html += '<span>• ' + t.timeAgo + '</span>';
+                    html += '</div></a>';
+                }
+                container.innerHTML = html;
+            }
+            
+            function loadVideos() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/videos', true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                console.log('Videos loaded:', data.videos ? data.videos.length : 0);
+                                if (data.videos && data.videos.length > 0) {
+                                    renderVideos(data.videos, 'videosCenter');
+                                    renderVideos(data.videos, 'videosMobile');
+                                } else {
+                                    document.getElementById('videosCenter').innerHTML = '<p class="error">No videos available</p>';
+                                    document.getElementById('videosMobile').innerHTML = '<p class="error">No videos available</p>';
+                                }
+                            } catch (e) {
+                                console.error('Video parse error:', e);
+                                document.getElementById('videosCenter').innerHTML = '<p class="error">Error loading videos</p>';
+                                document.getElementById('videosMobile').innerHTML = '<p class="error">Error loading videos</p>';
+                            }
+                        } else {
+                            console.error('Video fetch error:', xhr.status);
+                            document.getElementById('videosCenter').innerHTML = '<p class="error">Failed to load videos</p>';
+                            document.getElementById('videosMobile').innerHTML = '<p class="error">Failed to load videos</p>';
+                        }
+                    }
+                };
+                xhr.send();
+            }
+            
+            function loadTweets() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/tweets', true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                console.log('Tweets loaded:', data.tweets ? data.tweets.length : 0);
+                                if (data.tweets && data.tweets.length > 0) {
+                                    var half = Math.ceil(data.tweets.length / 2);
+                                    renderTweets(data.tweets.slice(0, half), 'tweetsLeft');
+                                    renderTweets(data.tweets.slice(half), 'tweetsRight');
+                                    renderTweets(data.tweets, 'tweetsMobile');
+                                } else {
+                                    document.getElementById('tweetsLeft').innerHTML = '<p class="error">No posts available</p>';
+                                    document.getElementById('tweetsRight').innerHTML = '<p class="error">No posts available</p>';
+                                    document.getElementById('tweetsMobile').innerHTML = '<p class="error">No posts available</p>';
+                                }
+                            } catch (e) {
+                                console.error('Tweet parse error:', e);
+                                document.getElementById('tweetsLeft').innerHTML = '<p class="error">Error loading posts</p>';
+                                document.getElementById('tweetsRight').innerHTML = '<p class="error">Error loading posts</p>';
+                                document.getElementById('tweetsMobile').innerHTML = '<p class="error">Error loading posts</p>';
+                            }
+                        } else {
+                            console.error('Tweet fetch error:', xhr.status);
+                            document.getElementById('tweetsLeft').innerHTML = '<p class="error">Failed to load posts</p>';
+                            document.getElementById('tweetsRight').innerHTML = '<p class="error">Failed to load posts</p>';
+                            document.getElementById('tweetsMobile').innerHTML = '<p class="error">Failed to load posts</p>';
+                        }
+                    }
+                };
+                xhr.send();
+            }
+            
+            // Load content on page load
+            loadVideos();
+            loadTweets();
+            
+            // Refresh every 5 minutes
+            setInterval(function() {
+                loadVideos();
+                loadTweets();
+            }, 300000);
+        })();
+    </script>
+</body>
+</html>
