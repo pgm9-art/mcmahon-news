@@ -1,8 +1,8 @@
-const fetch = require('node-fetch');
+var fetch = require('node-fetch');
 
-const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
+var X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-const X_ACCOUNTS = [
+var X_ACCOUNTS = [
     { handle: 'TuckerCarlson', name: 'Tucker Carlson' },
     { handle: 'ggreenwald', name: 'Glenn Greenwald' },
     { handle: 'NickJFuentes', name: 'Nick Fuentes' },
@@ -20,19 +20,22 @@ const X_ACCOUNTS = [
     { handle: 'RealAlexJones', name: 'Alex Jones' }
 ];
 
-const MAX_PER_SOURCE = 3;
-const NON_NEWS_FILTERS = ['subscribe', 'join us', 'live stream starting', 'going live', 'trailer', 'preview'];
+var MAX_PER_SOURCE = 3;
+var NON_NEWS_FILTERS = ['subscribe', 'join us', 'live stream starting', 'going live', 'trailer', 'preview'];
 
 function isNewsContent(headline) {
     if (!headline) return false;
-    const lower = headline.toLowerCase();
-    return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
+    var lower = headline.toLowerCase();
+    for (var i = 0; i < NON_NEWS_FILTERS.length; i++) {
+        if (lower.indexOf(NON_NEWS_FILTERS[i]) !== -1) return false;
+    }
+    return true;
 }
 
 function timeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now - date) / 1000);
+    var now = new Date();
+    var date = new Date(dateString);
+    var seconds = Math.floor((now - date) / 1000);
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
@@ -41,21 +44,24 @@ function timeAgo(dateString) {
 }
 
 function sortByRecency(items) {
-    return items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    return items.sort(function(a, b) {
+        return new Date(b.pubDate) - new Date(a.pubDate);
+    });
 }
 
 function limitPerSource(items, max) {
-    const counts = {};
-    return items.filter(item => {
-        const src = item.source.toLowerCase();
+    var counts = {};
+    return items.filter(function(item) {
+        var src = item.source.toLowerCase();
         counts[src] = (counts[src] || 0) + 1;
         return counts[src] <= max;
     });
 }
 
-module.exports = async (req, res) => {
+module.exports = async function(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     
     if (!X_BEARER_TOKEN) {
         return res.status(200).json({
@@ -66,14 +72,14 @@ module.exports = async (req, res) => {
     }
     
     try {
-        const limit = parseInt(req.query.limit) || 30;
-        const stories = [];
-        const errors = [];
+        var limit = parseInt(req.query.limit) || 30;
+        var stories = [];
+        var errors = [];
         
-        const results = await Promise.allSettled(
-            X_ACCOUNTS.map(async (account) => {
+        var results = await Promise.allSettled(
+            X_ACCOUNTS.map(async function(account) {
                 try {
-                    const userResponse = await fetch(
+                    var userResponse = await fetch(
                         'https://api.twitter.com/2/users/by/username/' + account.handle,
                         { headers: { 'Authorization': 'Bearer ' + X_BEARER_TOKEN } }
                     );
@@ -82,12 +88,12 @@ module.exports = async (req, res) => {
                         return { account: account, error: 'User fetch failed (' + userResponse.status + ')' };
                     }
                     
-                    const userData = await userResponse.json();
+                    var userData = await userResponse.json();
                     if (!userData.data || !userData.data.id) {
                         return { account: account, error: 'No user data' };
                     }
                     
-                    const tweetsResponse = await fetch(
+                    var tweetsResponse = await fetch(
                         'https://api.twitter.com/2/users/' + userData.data.id + '/tweets?max_results=5&tweet.fields=created_at,public_metrics&exclude=retweets,replies',
                         { headers: { 'Authorization': 'Bearer ' + X_BEARER_TOKEN } }
                     );
@@ -96,11 +102,12 @@ module.exports = async (req, res) => {
                         return { account: account, error: 'Tweets fetch failed (' + tweetsResponse.status + ')' };
                     }
                     
-                    const tweetsData = await tweetsResponse.json();
+                    var tweetsData = await tweetsResponse.json();
                     
                     if (tweetsData.data && tweetsData.data.length > 0) {
-                        const accountTweets = [];
-                        for (const tweet of tweetsData.data) {
+                        var accountTweets = [];
+                        for (var i = 0; i < tweetsData.data.length; i++) {
+                            var tweet = tweetsData.data[i];
                             if (!isNewsContent(tweet.text) || tweet.text.length < 30) continue;
                             
                             var headline = tweet.text.split('\n')[0];
@@ -133,15 +140,22 @@ module.exports = async (req, res) => {
             })
         );
         
-        for (const result of results) {
+        for (var i = 0; i < results.length; i++) {
+            var result = results[i];
             if (result.status === 'fulfilled') {
-                if (result.value.tweets) stories.push(...result.value.tweets);
-                if (result.value.error) errors.push(result.value.account.handle + ': ' + result.value.error);
+                if (result.value.tweets) {
+                    for (var j = 0; j < result.value.tweets.length; j++) {
+                        stories.push(result.value.tweets[j]);
+                    }
+                }
+                if (result.value.error) {
+                    errors.push(result.value.account.handle + ': ' + result.value.error);
+                }
             }
         }
         
-        const sorted = sortByRecency(stories);
-        const limited = limitPerSource(sorted, MAX_PER_SOURCE);
+        var sorted = sortByRecency(stories);
+        var limited = limitPerSource(sorted, MAX_PER_SOURCE);
         
         res.status(200).json({
             tweets: limited.slice(0, limit),
