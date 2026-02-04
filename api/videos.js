@@ -5,13 +5,13 @@ const YOUTUBE_CHANNELS = [
     { id: 'UCGttrUON87gWfU6dMWm1fcA', name: 'Tucker Carlson', handle: 'tuckercarlson' },
     { id: 'UCjjBjVc0b1cIpNGEeZtS2lg', name: 'TCN', handle: 'tcnetwork' },
     { id: 'UCDkEYb-TXJVWLvOokshtlsw', name: 'Judge Napolitano', handle: 'judgingfreedom' },
-    { id: 'UCuMo0RRtnNDuMB8DV5stEag', name: 'Breaking Points', handle: 'breakingpoints' },
+    { id: 'UCDRIjKy6eZOvKtOELtTdeUA', name: 'Breaking Points', handle: 'breakingpoints' },
     { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow' },
     { id: 'UCi5N_uAqApEUIlg32QzkPlg', name: 'Bret Weinstein', handle: 'darkhorsepod' },
-    { id: 'UCT5FOHgYZGRrPkVokP7Pm6A', name: 'Dave Smith', handle: 'partoftheproblem' },
+    { id: 'UCEfe80CP2cs1eLRNQazffZw', name: 'Dave Smith', handle: 'partoftheproblem' },
     { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks' },
-    { id: 'UCbn1OgGei-DV7aSRo_HaZ0Q', name: 'Glenn Greenwald', handle: 'glenngreenwald' },
-    { id: 'UCh3xEPDFqZVvyXPfCPoxdog', name: 'Owen Shroyer', handle: 'owenreport' },
+    { id: 'UChzVhAwzGR7hV-4O8ZmBLHg', name: 'Glenn Greenwald', handle: 'glenngreenwald' },
+    { id: 'UCcE1-IiX4fLqbbVjPx0Bnag', name: 'Owen Shroyer', handle: 'owenreport' },
     { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan' },
     { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow' },
     { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996' }
@@ -54,7 +54,6 @@ async function fetchYouTubeVideo(channel) {
     const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1];
     const title = entry.match(/<title>([^<]+)<\/title>/)?.[1];
     const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
-    const channelImg = entry.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1];
     
     if (!videoId || !title) {
         throw new Error('Could not parse video data');
