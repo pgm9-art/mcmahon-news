@@ -11,7 +11,6 @@ const parser = new RSSParser({
         item: [['media:group', 'mediaGroup']]
     }
 });
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -52,14 +51,8 @@ const VIDEO_FEEDS = [
     { name: 'Nick Fuentes', url: 'https://openrss.org/rumble.com/c/NickJFuentes', platform: 'rumble' }
 ];
 
-const MAX_PER_SOURCE = 2;
-
+const MAX_PER_SOURCE = 3;
 const NON_NEWS_FILTERS = ['subscribe', 'join us', 'live stream starting', 'going live', 'trailer', 'preview'];
-
-let cachedTweets = [];
-let cachedVideos = [];
-let lastFetch = null;
-let fetchErrors = [];
 
 function isNewsContent(headline) {
     if (!headline) return false;
@@ -67,22 +60,16 @@ function isNewsContent(headline) {
     return !NON_NEWS_FILTERS.some(filter => lower.includes(filter));
 }
 
-function getVideoThumbnail(item, feed) {
+function getVideoThumbnail(item) {
     if (item.link) {
         const match = item.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
         if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
     }
-    
     if (item.mediaGroup && item.mediaGroup['media:thumbnail']) {
         const thumb = item.mediaGroup['media:thumbnail'];
-        if (Array.isArray(thumb) && thumb[0] && thumb[0].$) {
-            return thumb[0].$.url;
-        }
-        if (thumb && thumb.$) {
-            return thumb.$.url;
-        }
+        if (Array.isArray(thumb) && thumb[0] && thumb[0].$) return thumb[0].$.url;
+        if (thumb && thumb.$) return thumb.$.url;
     }
-    
     return null;
 }
 
@@ -90,148 +77,11 @@ function timeAgo(dateString) {
     const now = new Date();
     const date = new Date(dateString);
     const seconds = Math.floor((now - date) / 1000);
-    
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
     if (seconds < 172800) return 'yesterday';
     return Math.floor(seconds / 86400) + 'd ago';
-}
-
-async function fetchXPosts() {
-    if (!X_BEARER_TOKEN) {
-        console.log('No X Bearer Token configured');
-        fetchErrors.push('No X Bearer Token');
-        return [];
-    }
-    
-    const stories = [];
-    const successfulAccounts = [];
-    const failedAccounts = [];
-    
-    for (const account of X_ACCOUNTS) {
-        try {
-            const userResponse = await fetch(
-                `https://api.twitter.com/2/users/by/username/${account.handle}`,
-                { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
-            );
-            
-            if (!userResponse.ok) {
-                const errorText = await userResponse.text();
-                failedAccounts.push(`${account.handle}: User fetch failed (${userResponse.status}) - ${errorText.substring(0, 100)}`);
-                continue;
-            }
-            
-            const userData = await userResponse.json();
-            
-            if (!userData.data || !userData.data.id) {
-                failedAccounts.push(`${account.handle}: No user data returned`);
-                continue;
-            }
-            
-            const userId = userData.data.id;
-            
-            const tweetsResponse = await fetch(
-                `https://api.twitter.com/2/users/${userId}/tweets?max_results=5&tweet.fields=created_at,public_metrics&exclude=retweets,replies`,
-                { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
-            );
-            
-            if (!tweetsResponse.ok) {
-                const errorText = await tweetsResponse.text();
-                failedAccounts.push(`${account.handle}: Tweets fetch failed (${tweetsResponse.status}) - ${errorText.substring(0, 100)}`);
-                continue;
-            }
-            
-            const tweetsData = await tweetsResponse.json();
-            
-            if (tweetsData.data && tweetsData.data.length > 0) {
-                successfulAccounts.push(account.handle);
-                
-                for (const tweet of tweetsData.data) {
-                    if (!isNewsContent(tweet.text)) continue;
-                    if (tweet.text.length < 30) continue;
-                    
-                    let headline = tweet.text.split('\n')[0];
-                    if (headline.length > 200) {
-                        headline = headline.substring(0, 197) + '...';
-                    }
-                    
-                    const engagement = tweet.public_metrics ?
-                        (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2 + tweet.public_metrics.reply_count) : 0;
-                    
-                    stories.push({
-                        headline,
-                        url: `https://x.com/${account.handle}/status/${tweet.id}`,
-                        source: account.name,
-                        sourceHandle: account.handle,
-                        pubDate: tweet.created_at,
-                        timeAgo: timeAgo(tweet.created_at),
-                        type: 'tweet',
-                        engagement,
-                    });
-                }
-            }
-        } catch (error) {
-            failedAccounts.push(`${account.handle}: ${error.message}`);
-        }
-    }
-    
-    console.log(`X API: ${successfulAccounts.length}/15 accounts succeeded`);
-    console.log(`Successful: ${successfulAccounts.join(', ')}`);
-    if (failedAccounts.length > 0) {
-        console.log(`Failed: ${failedAccounts.length} accounts`);
-        failedAccounts.forEach(f => console.log(`- ${f}`));
-        fetchErrors.push(...failedAccounts);
-    }
-    
-    return stories;
-}
-
-async function fetchVideoFeeds() {
-    const videos = [];
-    const successfulFeeds = [];
-    const failedFeeds = [];
-    
-    for (const feed of VIDEO_FEEDS) {
-        try {
-            const parsed = await parser.parseURL(feed.url);
-            
-            if (parsed.items && parsed.items.length > 0) {
-                successfulFeeds.push(feed.name);
-                
-                for (const item of parsed.items.slice(0, 3)) {
-                    if (!isNewsContent(item.title)) continue;
-                    
-                    const thumbnail = getVideoThumbnail(item, feed);
-                    const pubDate = item.pubDate || item.isoDate || new Date().toISOString();
-                    
-                    videos.push({
-                        headline: item.title,
-                        url: item.link,
-                        source: feed.name,
-                        pubDate,
-                        timeAgo: timeAgo(pubDate),
-                        imageUrl: thumbnail,
-                        type: 'video',
-                        platform: feed.platform || 'youtube'
-                    });
-                }
-            }
-        } catch (error) {
-            failedFeeds.push(feed.name);
-            console.log(`Feed error (${feed.name}): ${error.message}`);
-        }
-    }
-    
-    console.log(`Video feeds: ${successfulFeeds.length}/${VIDEO_FEEDS.length} succeeded`);
-    console.log(`Successful: ${successfulFeeds.join(', ')}`);
-    if (failedFeeds.length > 0) {
-        console.log(`Failed: ${failedFeeds.length} feeds`);
-        failedFeeds.forEach(f => console.log(`- ${f}`));
-        fetchErrors.push(...failedFeeds);
-    }
-    
-    return videos;
 }
 
 function sortByRecency(items) {
@@ -247,88 +97,178 @@ function limitPerSource(items, max) {
     });
 }
 
-async function refreshStories() {
-    console.log('==========================================');
-    console.log('REFRESHING STORIES - ' + new Date().toISOString());
-    console.log('==========================================');
-    fetchErrors = [];
-    
-    try {
-        const [xPosts, videos] = await Promise.all([
-            fetchXPosts(),
-            fetchVideoFeeds()
-        ]);
-        
-        const sortedTweets = sortByRecency(xPosts);
-        const sortedVideos = sortByRecency(videos);
-        
-        cachedTweets = limitPerSource(sortedTweets, MAX_PER_SOURCE);
-        cachedVideos = limitPerSource(sortedVideos, MAX_PER_SOURCE);
-        lastFetch = new Date().toISOString();
-        
-        console.log(`Cached ${cachedTweets.length} tweets, ${cachedVideos.length} videos`);
-    } catch (error) {
-        console.log(`Fatal refresh error: ${error.message}`);
-        fetchErrors.push(`Fatal: ${error.message}`);
+// Fetch X posts on-demand
+async function fetchXPosts() {
+    if (!X_BEARER_TOKEN) {
+        console.log('No X Bearer Token configured');
+        return { tweets: [], errors: ['No X Bearer Token'] };
     }
+    
+    const stories = [];
+    const errors = [];
+    
+    const results = await Promise.allSettled(
+        X_ACCOUNTS.map(async (account) => {
+            try {
+                const userResponse = await fetch(
+                    `https://api.twitter.com/2/users/by/username/${account.handle}`,
+                    { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
+                );
+                
+                if (!userResponse.ok) return { account, error: `User fetch failed (${userResponse.status})` };
+                
+                const userData = await userResponse.json();
+                if (!userData.data?.id) return { account, error: 'No user data' };
+                
+                const tweetsResponse = await fetch(
+                    `https://api.twitter.com/2/users/${userData.data.id}/tweets?max_results=5&tweet.fields=created_at,public_metrics&exclude=retweets,replies`,
+                    { headers: { 'Authorization': `Bearer ${X_BEARER_TOKEN}` } }
+                );
+                
+                if (!tweetsResponse.ok) return { account, error: `Tweets fetch failed (${tweetsResponse.status})` };
+                
+                const tweetsData = await tweetsResponse.json();
+                
+                if (tweetsData.data?.length > 0) {
+                    const accountTweets = [];
+                    for (const tweet of tweetsData.data) {
+                        if (!isNewsContent(tweet.text) || tweet.text.length < 30) continue;
+                        
+                        let headline = tweet.text.split('\n')[0];
+                        if (headline.length > 200) headline = headline.substring(0, 197) + '...';
+                        
+                        accountTweets.push({
+                            headline,
+                            url: `https://x.com/${account.handle}/status/${tweet.id}`,
+                            source: account.name,
+                            sourceHandle: account.handle,
+                            pubDate: tweet.created_at,
+                            timeAgo: timeAgo(tweet.created_at),
+                            type: 'tweet',
+                            engagement: tweet.public_metrics ? 
+                                (tweet.public_metrics.like_count + tweet.public_metrics.retweet_count * 2 + tweet.public_metrics.reply_count) : 0
+                        });
+                    }
+                    return { account, tweets: accountTweets };
+                }
+                return { account, tweets: [] };
+            } catch (error) {
+                return { account, error: error.message };
+            }
+        })
+    );
+    
+    for (const result of results) {
+        if (result.status === 'fulfilled') {
+            if (result.value.tweets) stories.push(...result.value.tweets);
+            if (result.value.error) errors.push(`${result.value.account.handle}: ${result.value.error}`);
+        }
+    }
+    
+    const sorted = sortByRecency(stories);
+    const limited = limitPerSource(sorted, MAX_PER_SOURCE);
+    
+    console.log(`X API: Fetched ${limited.length} tweets, ${errors.length} errors`);
+    return { tweets: limited, errors };
 }
 
-app.get('/api/tweets', (req, res) => {
-    const limit = parseInt(req.query.limit) || 30;
-    res.json({
-        tweets: cachedTweets.slice(0, limit),
-        lastUpdated: lastFetch,
-        count: cachedTweets.length
-    });
+// Fetch video feeds on-demand
+async function fetchVideoFeeds() {
+    const videos = [];
+    const errors = [];
+    
+    const results = await Promise.allSettled(
+        VIDEO_FEEDS.map(async (feed) => {
+            try {
+                const parsed = await parser.parseURL(feed.url);
+                if (parsed.items?.length > 0) {
+                    const feedVideos = [];
+                    for (const item of parsed.items.slice(0, 5)) {
+                        if (!isNewsContent(item.title)) continue;
+                        const pubDate = item.pubDate || item.isoDate || new Date().toISOString();
+                        feedVideos.push({
+                            headline: item.title,
+                            url: item.link,
+                            source: feed.name,
+                            pubDate,
+                            timeAgo: timeAgo(pubDate),
+                            imageUrl: getVideoThumbnail(item),
+                            type: 'video',
+                            platform: feed.platform || 'youtube'
+                        });
+                    }
+                    return { feed, videos: feedVideos };
+                }
+                return { feed, videos: [] };
+            } catch (error) {
+                return { feed, error: error.message };
+            }
+        })
+    );
+    
+    for (const result of results) {
+        if (result.status === 'fulfilled') {
+            if (result.value.videos) videos.push(...result.value.videos);
+            if (result.value.error) errors.push(`${result.value.feed.name}: ${result.value.error}`);
+        }
+    }
+    
+    const sorted = sortByRecency(videos);
+    const limited = limitPerSource(sorted, MAX_PER_SOURCE);
+    
+    console.log(`Videos: Fetched ${limited.length} videos, ${errors.length} errors`);
+    return { videos: limited, errors };
+}
+
+// API endpoint for tweets - fetches on-demand
+app.get('/api/tweets', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 30;
+        const { tweets, errors } = await fetchXPosts();
+        res.json({
+            tweets: tweets.slice(0, limit),
+            count: tweets.length,
+            errors: errors.slice(0, 10),
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Tweets API error:', error);
+        res.status(500).json({ error: error.message, tweets: [] });
+    }
 });
 
-app.get('/api/videos', (req, res) => {
-    const limit = parseInt(req.query.limit) || 20;
-    res.json({
-        videos: cachedVideos.slice(0, limit),
-        lastUpdated: lastFetch,
-        count: cachedVideos.length
-    });
+// API endpoint for videos - fetches on-demand  
+app.get('/api/videos', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const { videos, errors } = await fetchVideoFeeds();
+        res.json({
+            videos: videos.slice(0, limit),
+            count: videos.length,
+            errors: errors.slice(0, 10),
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Videos API error:', error);
+        res.status(500).json({ error: error.message, videos: [] });
+    }
 });
 
+// Health check
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
-        tweets: cachedTweets.length,
-        tweetSources: [...new Set(cachedTweets.map(t => t.source))],
-        videos: cachedVideos.length,
-        videoSources: [...new Set(cachedVideos.map(v => v.source))],
-        lastFetch,
-        errors: fetchErrors.slice(0, 30),
-        uptime: process.uptime()
+        hasXToken: !!X_BEARER_TOKEN,
+        videoFeeds: VIDEO_FEEDS.length,
+        xAccounts: X_ACCOUNTS.length,
+        timestamp: new Date().toISOString()
     });
 });
 
-app.get('/api/refresh', async (req, res) => {
-    await refreshStories();
-    res.json({
-        success: true,
-        tweets: cachedTweets.length,
-        tweetSources: [...new Set(cachedTweets.map(t => t.source))],
-        videos: cachedVideos.length,
-        videoSources: [...new Set(cachedVideos.map(v => v.source))],
-        errors: fetchErrors.slice(0, 30)
-    });
-});
-
+// Serve index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Initial data load
-refreshStories().then(() => {
-    app.listen(PORT, () => {
-        console.log(`McMahon.News running on port ${PORT}`);
-    });
-});
-
-// Refresh every 15 minutes
-setInterval(refreshStories, 15 * 60 * 1000);
-
-// CRITICAL: Export the app for Vercel serverless functions
+// CRITICAL: Export for Vercel serverless
 module.exports = app;
