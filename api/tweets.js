@@ -40,7 +40,8 @@ async function fetchTweet(account, bearerToken) {
     const userId = userData.data.id;
     const profileImage = userData.data.profile_image_url?.replace('_normal', '_200x200');
     
-    const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets?max_results=5&tweet.fields=created_at,public_metrics&exclude=retweets,replies`;
+    // Fetch more tweets so we can filter out ads
+    const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,public_metrics&exclude=retweets,replies`;
     
     const tweetsResponse = await fetch(tweetsUrl, {
         headers: { 'Authorization': `Bearer ${bearerToken}` }
@@ -55,7 +56,10 @@ async function fetchTweet(account, bearerToken) {
         throw new Error('No tweets found');
     }
     
-    const tweet = tweetsData.data[0];
+    // Find first non-ad tweet (skip "Paid partnership" posts)
+    const tweet = tweetsData.data.find(t => 
+        !t.text.toLowerCase().startsWith('paid partnership')
+    ) || tweetsData.data[0]; // fallback to first if all are ads
     
     return {
         id: tweet.id,
