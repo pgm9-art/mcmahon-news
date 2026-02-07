@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mcmahon.news/sitemap.xml
