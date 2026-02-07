@@ -1,5 +1,4 @@
 // X Sources - 18 accounts
-// Sorted by follower count, distributed zigzag (1-left, 2-right, 3-left, etc.)
 const X_ACCOUNTS = [
     { handle: 'TuckerCarlson', name: 'Tucker Carlson', followers: 17000000 },
     { handle: 'EndWokeness', name: 'End Wokeness', followers: 3200000 },
@@ -18,7 +17,7 @@ const X_ACCOUNTS = [
     { handle: 'TheYoungTurks', name: 'The Young Turks', followers: 600000 },
     { handle: 'TheGrayzoneNews', name: 'The Grayzone', followers: 500000 },
     { handle: 'DropSiteNews', name: 'Drop Site News', followers: 400000 },
-    { handle: 'JudgeNap', name: 'Judge Napolitano', followers: 300000 }
+    { handle: 'iancarrollshow', name: 'Ian Carroll', followers: 300000 }
 ];
 
 async function fetchTweet(account, bearerToken) {
@@ -88,14 +87,14 @@ function timeAgo(dateString) {
     return Math.floor(seconds / 604800) + 'w ago';
 }
 
-// Distribute tweets zigzag: odd positions (1,3,5...) go left, even (2,4,6...) go right
+// Distribute tweets zigzag: 1st goes left, 2nd goes right, 3rd left, 4th right, etc.
 function distributeZigzag(sortedTweets) {
     const left = [];
     const right = [];
     
     sortedTweets.forEach((tweet, index) => {
         if (index % 2 === 0) {
-            left.push(tweet); // 1st, 3rd, 5th... go left
+            left.push(tweet);  // 1st, 3rd, 5th... go left
         } else {
             right.push(tweet); // 2nd, 4th, 6th... go right
         }
@@ -135,10 +134,10 @@ module.exports = async function(req, res) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    // Sort by follower count (highest first)
-    tweets.sort((a, b) => b.followers - a.followers);
+    // Sort by recency (most recent first)
+    tweets.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
     
-    // Distribute zigzag for left/right columns
+    // Distribute zigzag for left/right columns (based on recency order)
     const { left, right } = distributeZigzag(tweets);
     
     res.status(200).json({
