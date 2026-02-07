@@ -6,10 +6,3 @@
     <priority>1.0</priority>
   </url>
 </urlset>
-```
-
-**New file — `robots.txt`** (create in repo root):
-```
-User-agent: *
-Allow: /
-Sitemap: https://mcmahon.news/sitemap.xml
