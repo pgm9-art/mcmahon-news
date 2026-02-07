@@ -38,7 +38,6 @@ async function scrapeChannel(browser, channel) {
 
     // Try very broad selector - just find any link with /v in the href (Rumble video URLs)
     const video = await page.evaluate(() => {
-      // Method 1: Find all links that look like Rumble video URLs
       const allLinks = Array.from(document.querySelectorAll('a[href*="/v"]'));
       const videoLinks = allLinks.filter(a => {
         const href = a.getAttribute('href') || '';
@@ -47,7 +46,102 @@ async function scrapeChannel(browser, channel) {
 
       if (videoLinks.length === 0) return null;
 
-      // Get the first video link's parent container for metadata
       const firstLink = videoLinks[0];
       const href = firstLink.getAttribute('href');
-      const title = firstLink.textContent.trim() || firstLi
+      const title = firstLink.textContent.trim() || firstLink.getAttribute('title') || '';
+
+      // Look for thumbnail near this link
+      const container = firstLink.closest('div, li, article') || firstLink.parentElement;
+      const img = container ? container.querySelector('img') : null;
+      const thumbnail = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+
+      // Look for time/date near this link
+      const timeEl = container ? container.querySelector('time') : null;
+      const dateStr = timeEl ? (timeEl.getAttribute('datetime') || timeEl.textContent.trim()) : '';
+
+      return { title, href, thumbnail, dateStr, linkCount: videoLinks.length };
+    });
+
+    await page.close();
+
+    if (!video || !video.title) {
+      console.log(`No video found for ${channel.name}`);
+      return null;
+    }
+
+    console.log(`Found ${video.linkCount} video links`);
+    const videoUrl = video.href.startsWith('http') ? video.href : `https://rumble.com${video.href}`;
+
+    return {
+      id: videoUrl,
+      title: video.title,
+      url: videoUrl,
+      thumbnail: video.thumbnail,
+      source: channel.name,
+      sourceHandle: channel.handle,
+      platform: 'rumble',
+      pubDate: video.dateStr || new Date().toISOString(),
+      subs: channel.subs
+    };
+  } catch (err) {
+    console.error(`Error scraping ${channel.name}:`, err.message);
+    await page.close();
+    return null;
+  }
+}
+
+async function updateGist(data) {
+  const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${GIST_TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      files: {
+        'rumble-data.json': {
+          content: JSON.stringify(data, null, 2)
+        }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gist update failed: ${response.status} ${response.statusText}`);
+  }
+  console.log('Gist updated successfully');
+}
+
+async function main() {
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+
+  const results = {};
+  for (const channel of CHANNELS) {
+    const video = await scrapeChannel(browser, channel);
+    if (video) {
+      results[channel.handle] = video;
+      console.log(`✓ ${channel.name}: ${video.title}`);
+    } else {
+      console.log(`✗ ${channel.name}: No data scraped`);
+    }
+  }
+
+  await browser.close();
+
+  const gistData = {
+    lastUpdated: new Date().toISOString(),
+    channels: results
+  };
+
+  await updateGist(gistData);
+  console.log('Done!', JSON.stringify(gistData, null, 2));
+}
+
+main().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});
