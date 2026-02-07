@@ -9,13 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Install dependencies
-        run: npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth
+      - name: Verify script version
+        run: head -5 scripts/scrape-rumble.js
 
       - name: Scrape Rumble channels
         env:
