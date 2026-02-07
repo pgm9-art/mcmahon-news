@@ -96,6 +96,11 @@
             text-transform: uppercase;
         }
         
+        .desktop-layout > .column:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+        }
+        
         .live-dot {
             width: 8px;
             height: 8px;
@@ -113,11 +118,15 @@
         .video-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(5, 1fr);
             gap: 12px;
+            flex: 1;
         }
         
         .video-card {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             text-decoration: none;
             color: inherit;
             background: #fafafa;
@@ -131,7 +140,8 @@
         
         .video-thumb-wrap {
             position: relative;
-            aspect-ratio: 16/9;
+            flex: 1;
+            min-height: 0;
             background: var(--gray-200);
         }
         
@@ -285,6 +295,12 @@
         
         .mobile-video-list .video-grid {
             grid-template-columns: 1fr;
+            grid-template-rows: unset;
+        }
+        
+        .mobile-video-list .video-thumb-wrap {
+            aspect-ratio: 16/9;
+            flex: unset;
         }
         
         footer {
