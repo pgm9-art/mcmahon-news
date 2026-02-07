@@ -22,6 +22,33 @@ const RUMBLE_CHANNELS = [
     { handle: 'StewPeters', name: 'Stew Peters', subs: 400000 }
 ];
 
+// Fallback cache: update these periodically when Rumble feeds can't be fetched live
+// These ensure the slots are never blank even when Cloudflare blocks server requests
+const RUMBLE_FALLBACK = {
+    'nickjfuentes': {
+        id: 'https://rumble.com/v75cwza-america-first.html',
+        title: 'RETREAT FROM MINNEAPOLIS??? Trump Initiates FULL WITHDRAWAL From Minneapolis | America First Ep. 1635',
+        url: 'https://rumble.com/v75cwza-america-first.html',
+        thumbnail: 'https://1a-1791.com/video/fww1/42/s8/1/2/l/9/W/2l9Wz.oq1b.1-small-America-First-Ep.-1635.jpg',
+        source: 'Nick Fuentes',
+        sourceHandle: 'nickjfuentes',
+        platform: 'rumble',
+        pubDate: '2026-02-06T01:29:40+00:00',
+        subs: 500000
+    },
+    'StewPeters': {
+        id: 'https://rumble.com/v75ejsw-the-based-report-legislative-bolsheviks-wage-war-on-white-america.html',
+        title: 'THE BASED REPORT: Legislative Bolsheviks Wage WAR On White America',
+        url: 'https://rumble.com/v75ejsw-the-based-report-legislative-bolsheviks-wage-war-on-white-america.html',
+        thumbnail: 'https://1a-1791.com/video/fww1/70/s8/1/a/Z/p/X/aZpXz.oq1b-small-THE-BASED-REPORT-Legislativ.jpg',
+        source: 'Stew Peters',
+        sourceHandle: 'StewPeters',
+        platform: 'rumble',
+        pubDate: '2026-02-06T23:05:44+00:00',
+        subs: 400000
+    }
+};
+
 function timeAgo(dateString) {
     const now = new Date();
     const date = new Date(dateString);
@@ -80,123 +107,112 @@ async function fetchYouTubeVideo(channel) {
     };
 }
 
-// Scrape Rumble channel page directly (openrss.org returns 429)
-async function fetchRumbleVideo(channel) {
+// Method 1: Try OpenRSS feed
+async function fetchRumbleViaOpenRSS(channel) {
+    const feedUrl = `https://openrss.org/feed/rumble.com/c/${channel.handle}`;
+    const response = await fetch(feedUrl, { 
+        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml' },
+        timeout: 5000 
+    });
+    
+    if (!response.ok) {
+        throw new Error(`OpenRSS failed (${response.status})`);
+    }
+    
+    const text = await response.text();
+    
+    // Verify we got XML, not HTML
+    if (text.includes('<!DOCTYPE html>') || !text.includes('<item>')) {
+        throw new Error('OpenRSS returned HTML, not RSS');
+    }
+    
+    const itemMatch = text.match(/<item>([\s\S]*?)<\/item>/);
+    if (!itemMatch) {
+        throw new Error('No items in feed');
+    }
+    
+    const item = itemMatch[1];
+    const title = item.match(/<title>(?:<!\[CDATA\[)?([^\]<]+)(?:\]\]>)?<\/title>/)?.[1];
+    const link = item.match(/<link>([^<]+)<\/link>/)?.[1];
+    const pubDate = item.match(/<pubDate>([^<]+)<\/pubDate>/)?.[1];
+    let thumbnail = item.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1];
+    if (!thumbnail) {
+        thumbnail = item.match(/<enclosure[^>]*url="([^"]+)"/)?.[1];
+    }
+    
+    if (!title || !link) {
+        throw new Error('Could not parse Rumble feed data');
+    }
+    
+    return {
+        id: link,
+        title: title.trim(),
+        url: link,
+        thumbnail: thumbnail || null,
+        source: channel.name,
+        sourceHandle: channel.handle,
+        platform: 'rumble',
+        pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        timeAgo: pubDate ? timeAgo(pubDate) : 'recently',
+        subs: channel.subs
+    };
+}
+
+// Method 2: Try direct Rumble page scrape
+async function fetchRumbleViaScrape(channel) {
     const channelUrl = `https://rumble.com/c/${channel.handle}`;
     const response = await fetch(channelUrl, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml',
             'Accept-Language': 'en-US,en;q=0.9'
-        }
+        },
+        timeout: 5000
     });
     
     if (!response.ok) {
-        throw new Error(`Rumble page fetch failed (${response.status})`);
+        throw new Error(`Rumble scrape failed (${response.status})`);
     }
     
     const html = await response.text();
     
-    // Extract first video link and title from the channel page HTML
+    // Find first video link
     let videoUrl = null;
-    let videoTitle = null;
-    let videoThumb = null;
-    let videoPubDate = null;
-    
-    // Try videostream link class first
-    const videoPattern = /<a[^>]*class="[^"]*videostream__link[^"]*"[^>]*href="([^"]+)"[^>]*>/;
-    const linkMatch = html.match(videoPattern);
-    
-    if (linkMatch) {
-        videoUrl = 'https://rumble.com' + linkMatch[1];
-    } else {
-        // Fallback: find first /v* link that looks like a video
-        const broadPattern = /<a[^>]*href="(\/v[a-z0-9]+-[^"]+\.html[^"]*)"/;
-        const broadMatch = html.match(broadPattern);
-        if (broadMatch) {
-            videoUrl = 'https://rumble.com' + broadMatch[1].split('?')[0];
-        }
+    const broadPattern = /<a[^>]*href="(\/v[a-z0-9]+-[^"]+\.html)[^"]*"/;
+    const broadMatch = html.match(broadPattern);
+    if (broadMatch) {
+        videoUrl = 'https://rumble.com' + broadMatch[1];
     }
     
     if (!videoUrl) {
-        throw new Error('No video found on Rumble channel page');
+        throw new Error('No video found on page');
     }
     
     // Extract title
-    const titlePatterns = [
-        /<h3[^>]*class="[^"]*videostream__title[^"]*"[^>]*>([^<]+)<\/h3>/,
-        /<title>([^<]+)<\/title>/
-    ];
-    
-    for (const pattern of titlePatterns) {
-        const match = html.match(pattern);
-        if (match) {
-            videoTitle = match[1].trim();
-            break;
-        }
+    let videoTitle = null;
+    const titleMatch = html.match(/<h3[^>]*>([^<]+)<\/h3>/);
+    if (titleMatch) {
+        videoTitle = titleMatch[1].trim();
     }
-    
-    // If we got the page title, it's not useful - try to get from the video area
-    if (!videoTitle || videoTitle.includes('Rumble')) {
-        const afterLink = html.indexOf(videoUrl.replace('https://rumble.com', ''));
-        if (afterLink > -1) {
-            const chunk = html.substring(afterLink, afterLink + 2000);
-            const titleMatch = chunk.match(/<(?:h3|span|div)[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</);
-            if (titleMatch) {
-                videoTitle = titleMatch[1].trim();
-            }
-        }
-    }
-    
-    // Try videostream listing title
-    if (!videoTitle) {
-        const listingTitleMatch = html.match(/class="videostream__title[^"]*"[^>]*>\s*<span[^>]*>([^<]+)/);
-        if (listingTitleMatch) {
-            videoTitle = listingTitleMatch[1].trim();
-        }
-    }
-    
-    // Last resort: extract from the video URL slug
     if (!videoTitle) {
         const slug = videoUrl.match(/\/v[a-z0-9]+-(.+)\.html/);
-        if (slug) {
-            videoTitle = slug[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        } else {
-            videoTitle = channel.name + ' - Latest Video';
-        }
+        videoTitle = slug ? slug[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : channel.name + ' - Latest';
     }
     
     // Extract thumbnail
-    const thumbPatterns = [
-        /class="videostream__image[^"]*"[^>]*src="([^"]+)"/,
-        /<img[^>]*class="[^"]*thumbnail__image[^"]*"[^>]*src="([^"]+)"/,
-        /<img[^>]*src="(https:\/\/[^"]*(?:sp\/|thumb)[^"]+)"/
-    ];
-    
-    for (const pattern of thumbPatterns) {
-        const match = html.match(pattern);
-        if (match) {
-            videoThumb = match[1];
-            break;
-        }
+    let videoThumb = null;
+    const thumbMatch = html.match(/<img[^>]*src="(https:\/\/1a-1791\.com\/video[^"]+)"/);
+    if (thumbMatch) {
+        videoThumb = thumbMatch[1];
     }
     
-    // Extract publish date from time element
+    // Extract date
     const timeMatch = html.match(/<time[^>]*datetime="([^"]+)"/);
-    if (timeMatch) {
-        videoPubDate = new Date(timeMatch[1]).toISOString();
-    } else {
-        videoPubDate = new Date().toISOString();
-    }
+    const videoPubDate = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
     
-    // Decode HTML entities in title
     videoTitle = videoTitle
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&#x27;/g, "'");
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'");
     
     return {
         id: videoUrl,
@@ -210,6 +226,44 @@ async function fetchRumbleVideo(channel) {
         timeAgo: timeAgo(videoPubDate),
         subs: channel.subs
     };
+}
+
+// Method 3: Hardcoded fallback
+function getRumbleFallback(channel) {
+    const fallback = RUMBLE_FALLBACK[channel.handle];
+    if (!fallback) return null;
+    return {
+        ...fallback,
+        timeAgo: timeAgo(fallback.pubDate),
+        cached: true
+    };
+}
+
+// Try all methods in order: OpenRSS -> Direct scrape -> Fallback cache
+async function fetchRumbleVideo(channel) {
+    // Method 1: OpenRSS
+    try {
+        const result = await fetchRumbleViaOpenRSS(channel);
+        return result;
+    } catch (e) {
+        // continue to next method
+    }
+    
+    // Method 2: Direct scrape
+    try {
+        const result = await fetchRumbleViaScrape(channel);
+        return result;
+    } catch (e) {
+        // continue to fallback
+    }
+    
+    // Method 3: Hardcoded fallback
+    const fallback = getRumbleFallback(channel);
+    if (fallback) {
+        return fallback;
+    }
+    
+    throw new Error('All Rumble fetch methods failed');
 }
 
 module.exports = async function(req, res) {
