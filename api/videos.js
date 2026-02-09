@@ -1,4 +1,3 @@
-// 15 YouTube Video Sources — fully automated, no local dependencies
 const YOUTUBE_CHANNELS = [
   { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan', subs: 19000000 },
   { id: 'UCTRwSFBJzBVsGOBzSAQEXBg', name: 'Tucker Carlson', handle: 'tuckercarlson', subs: 14000000 },
@@ -16,14 +15,6 @@ const YOUTUBE_CHANNELS = [
   { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996', subs: 300000 },
   { id: 'UCwvYhFMiOGdxOMOWw0hSCmA', name: 'Owen Shroyer', handle: 'owenreport', subs: 60000 }
 ];
-
-// ─── In-memory cache (persists across warm Vercel invocations) ───
-const videoCache = {};
-const STALE_TTL = 86400000;
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -79,30 +70,20 @@ module.exports = async function(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
+  const results = await Promise.allSettled(
+    YOUTUBE_CHANNELS.map(channel => fetchYouTubeVideo(channel))
+  );
+
   const videos = [];
   const errors = [];
-  const staleHandles = [];
 
-  // Fetch ONE AT A TIME with delay to avoid YouTube rate limits
-  for (const channel of YOUTUBE_CHANNELS) {
-    try {
-      const data = await fetchYouTubeVideo(channel);
-      videoCache[channel.id] = { data, timestamp: Date.now() };
-      videos.push(data);
-    } catch (err) {
-      // Try cache fallback
-      const cached = videoCache[channel.id];
-      if (cached && (Date.now() - cached.timestamp) < STALE_TTL) {
-        cached.data.timeAgo = timeAgo(cached.data.pubDate);
-        videos.push(cached.data);
-        staleHandles.push(channel.handle);
-      } else {
-        errors.push(`${channel.handle}: ${err.message}`);
-      }
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      videos.push(result.value);
+    } else {
+      errors.push(`${YOUTUBE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
     }
-    // 200ms delay between each fetch
-    await sleep(200);
-  }
+  });
 
   videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
@@ -110,7 +91,6 @@ module.exports = async function(req, res) {
     videos,
     count: videos.length,
     errors,
-    stale: staleHandles,
     lastUpdated: new Date().toISOString()
   });
 };
