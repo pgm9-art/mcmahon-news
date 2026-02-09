@@ -476,8 +476,8 @@
                         renderTweets(data.right, 'tweetsRight');
                     } else if (data.tweets) {
                         // Fallback: split in half
-                        renderTweets(data.tweets.slice(0, 9), 'tweetsLeft');
-                        renderTweets(data.tweets.slice(9, 18), 'tweetsRight');
+                        renderTweets(data.tweets.slice(0, 11), 'tweetsLeft');
+                        renderTweets(data.tweets.slice(11, 22), 'tweetsRight');
                     }
                     // Mobile gets all tweets sorted by followers
                     if (data.tweets) {
