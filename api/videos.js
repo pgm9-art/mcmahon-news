@@ -114,29 +114,45 @@ async function fetchVideoWithCache(channel) {
   }
 }
 
+// ─── Batch fetching to avoid YouTube rate limits ───
+async function fetchInBatches(channels, batchSize = 5) {
+  const videos = [];
+  const errors = [];
+  const staleHandles = [];
+
+  for (let i = 0; i < channels.length; i += batchSize) {
+    const batch = channels.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(channel => fetchVideoWithCache(channel))
+    );
+
+    results.forEach((result, idx) => {
+      const channel = batch[idx];
+      if (result.status === 'fulfilled') {
+        videos.push(result.value.data);
+        if (result.value.stale) {
+          staleHandles.push(channel.handle);
+        }
+      } else {
+        errors.push(`${channel.handle}: ${result.reason?.message || 'Failed'}`);
+      }
+    });
+
+    // Delay between batches to avoid YouTube rate limits
+    if (i + batchSize < channels.length) {
+      await sleep(300);
+    }
+  }
+
+  return { videos, errors, staleHandles };
+}
+
 module.exports = async function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
-  const videos = [];
-  const errors = [];
-  const staleHandles = [];
-
-  const results = await Promise.allSettled(
-    YOUTUBE_CHANNELS.map(channel => fetchVideoWithCache(channel))
-  );
-
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
-      videos.push(result.value.data);
-      if (result.value.stale) {
-        staleHandles.push(YOUTUBE_CHANNELS[index].handle);
-      }
-    } else {
-      errors.push(`${YOUTUBE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
-    }
-  });
+  const { videos, errors, staleHandles } = await fetchInBatches(YOUTUBE_CHANNELS, 5);
 
   // Sort by recency
   videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
