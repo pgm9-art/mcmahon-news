@@ -1,4 +1,4 @@
-// X Sources - 18 accounts
+// X Sources — 22 accounts
 const X_ACCOUNTS = [
     { handle: 'TuckerCarlson', name: 'Tucker Carlson', followers: 17000000 },
     { handle: 'EndWokeness', name: 'End Wokeness', followers: 3200000 },
@@ -17,49 +17,53 @@ const X_ACCOUNTS = [
     { handle: 'TheYoungTurks', name: 'The Young Turks', followers: 600000 },
     { handle: 'TheGrayzoneNews', name: 'The Grayzone', followers: 500000 },
     { handle: 'DropSiteNews', name: 'Drop Site News', followers: 400000 },
-    { handle: 'iancarrollshow', name: 'Ian Carroll', followers: 300000 }
+    { handle: 'iancarrollshow', name: 'Ian Carroll', followers: 300000 },
+    { handle: 'RealCandaceO', name: 'Candace Owens', followers: 5700000 },
+    { handle: 'DougAMacgregor', name: 'Col. Douglas Macgregor', followers: 900000 },
+    { handle: 'CollinRugg', name: 'Collin Rugg', followers: 3200000 },
+    { handle: 'libsoftiktok', name: 'Libs of TikTok', followers: 3700000 }
 ];
 
 async function fetchTweet(account, bearerToken) {
     const userUrl = `https://api.twitter.com/2/users/by/username/${account.handle}?user.fields=profile_image_url`;
-    
+
     const userResponse = await fetch(userUrl, {
         headers: { 'Authorization': `Bearer ${bearerToken}` }
     });
-    
+
     if (!userResponse.ok) {
         throw new Error(`User fetch failed (${userResponse.status})`);
     }
-    
+
     const userData = await userResponse.json();
     if (!userData.data) {
         throw new Error('User not found');
     }
-    
+
     const userId = userData.data.id;
     const profileImage = userData.data.profile_image_url?.replace('_normal', '_200x200');
-    
+
     // Fetch more tweets so we can filter out ads
     const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,public_metrics&exclude=retweets,replies`;
-    
+
     const tweetsResponse = await fetch(tweetsUrl, {
         headers: { 'Authorization': `Bearer ${bearerToken}` }
     });
-    
+
     if (!tweetsResponse.ok) {
         throw new Error(`Tweets fetch failed (${tweetsResponse.status})`);
     }
-    
+
     const tweetsData = await tweetsResponse.json();
     if (!tweetsData.data || tweetsData.data.length === 0) {
         throw new Error('No tweets found');
     }
-    
+
     // Find first non-ad tweet (skip "Paid partnership" posts)
-    const tweet = tweetsData.data.find(t => 
+    const tweet = tweetsData.data.find(t =>
         !t.text.toLowerCase().startsWith('paid partnership')
     ) || tweetsData.data[0]; // fallback to first if all are ads
-    
+
     return {
         id: tweet.id,
         text: tweet.text,
@@ -78,7 +82,7 @@ function timeAgo(dateString) {
     const now = new Date();
     const date = new Date(dateString);
     const seconds = Math.floor((now - date) / 1000);
-    
+
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
@@ -91,7 +95,7 @@ function timeAgo(dateString) {
 function distributeZigzag(sortedTweets) {
     const left = [];
     const right = [];
-    
+
     sortedTweets.forEach((tweet, index) => {
         if (index % 2 === 0) {
             left.push(tweet);  // 1st, 3rd, 5th... go left
@@ -99,7 +103,7 @@ function distributeZigzag(sortedTweets) {
             right.push(tweet); // 2nd, 4th, 6th... go right
         }
     });
-    
+
     return { left, right };
 }
 
@@ -107,21 +111,19 @@ module.exports = async function(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    
+
     const bearerToken = process.env.X_BEARER_TOKEN;
-    
+
     if (!bearerToken) {
-        return res.status(500).json({ 
+        return res.status(500).json({
             error: 'X_BEARER_TOKEN not configured',
-            tweets: [],
-            left: [],
-            right: []
+            tweets: [], left: [], right: []
         });
     }
-    
+
     const tweets = [];
     const errors = [];
-    
+
     // Fetch tweets sequentially with delay to avoid rate limits
     for (const account of X_ACCOUNTS) {
         try {
@@ -133,13 +135,13 @@ module.exports = async function(req, res) {
         // Small delay between requests
         await new Promise(resolve => setTimeout(resolve, 100));
     }
-    
+
     // Sort by recency (most recent first)
     tweets.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-    
+
     // Distribute zigzag for left/right columns (based on recency order)
     const { left, right } = distributeZigzag(tweets);
-    
+
     res.status(200).json({
         tweets: tweets,
         left: left,
