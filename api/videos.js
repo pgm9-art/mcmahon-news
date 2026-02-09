@@ -1,107 +1,151 @@
 // 15 YouTube Video Sources — fully automated, no local dependencies
 const YOUTUBE_CHANNELS = [
-    { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan', subs: 19000000 },
-    { id: 'UCGttrUON87gWfU6dMWm1fcA', name: 'Tucker Carlson', handle: 'tuckercarlson', subs: 14000000 },
-    { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks', subs: 5000000 },
-    { id: 'UCoJhK5kMc4LjBKdiYrDtzlA', name: 'Redacted', handle: 'redactednews', subs: 2800000 },
-    { id: 'UCDRIjKy6eZOvKtOELtTdeUA', name: 'Breaking Points', handle: 'breakingpoints', subs: 2100000 },
-    { id: 'UCkY4fdKOFk3Kiq7g5LLKYLw', name: 'Candace Owens', handle: 'CandaceOwensPodcast', subs: 1900000 },
-    { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow', subs: 1800000 },
-    { id: 'UCjjBjVc0b1cIpNGEeZtS2lg', name: 'TCN', handle: 'tcnetwork', subs: 1500000 },
-    { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow', subs: 1300000 },
-    { id: 'UCCgpGpylCfrJIV-RwA_L7tg', name: 'Ian Carroll', handle: 'iancarrollshow', subs: 1200000 },
-    { id: 'UCi5N_uAqApEUIlg32QzkPlg', name: 'Bret Weinstein', handle: 'darkhorsepod', subs: 900000 },
-    { id: 'UCEfe80CP2cs1eLRNQazffZw', name: 'Dave Smith', handle: 'partoftheproblem', subs: 400000 },
-    { id: 'UChzVhAwzGR7hV-4O8ZmBLHg', name: 'Glenn Greenwald', handle: 'glenngreenwald', subs: 350000 },
-    { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996', subs: 300000 },
-    { id: 'UCcE1-IiX4fLqbbVjPx0Bnag', name: 'Owen Shroyer', handle: 'owenreport', subs: 60000 }
+  { id: 'UCzQUP1qoWDoEbmsQxvdjxgQ', name: 'Joe Rogan', handle: 'joerogan', subs: 19000000 },
+  { id: 'UCTRwSFBJzBVsGOBzSAQEXBg', name: 'Tucker Carlson', handle: 'tuckercarlson', subs: 14000000 },
+  { id: 'UC1yBKRuGpC1tSM73A0ZjYjQ', name: 'The Young Turks', handle: 'theyoungturks', subs: 5000000 },
+  { id: 'UCoJhK5kMc4LjBKdiYrDtzlA', name: 'Redacted', handle: 'redactednews', subs: 2800000 },
+  { id: 'UC_vz6SdnIGjWkai27ramfXQ', name: 'Breaking Points', handle: 'breakingpoints', subs: 2100000 },
+  { id: 'UCkY4fdKOFk3Kiq7g5LLKYLw', name: 'Candace Owens', handle: 'CandaceOwensPodcast', subs: 1900000 },
+  { id: 'UC4woSp8ITBoYDmjkukhEhxg', name: 'Tim Dillon', handle: 'timdillonshow', subs: 1800000 },
+  { id: 'UCkNOcgdA6jGlSdi-FYXnjfQ', name: 'TCN', handle: 'tcnetwork', subs: 1500000 },
+  { id: 'UC3M7l8ved_rYQ45AVzS0RGA', name: 'Jimmy Dore', handle: 'thejimmydoreshow', subs: 1300000 },
+  { id: 'UCCgpGpylCfrJIV-RwA_L7tg', name: 'Ian Carroll', handle: 'iancarrollshow', subs: 1200000 },
+  { id: 'UCi5N_uAqApEUIlg7ryRUUWg', name: 'Bret Weinstein', handle: 'darkhorsepod', subs: 900000 },
+  { id: 'UCcM3PwIB-MCWkfCqOmgORUg', name: 'Dave Smith', handle: 'partoftheproblem', subs: 400000 },
+  { id: 'UCbnBVEqsgAWeMRJ6v3ySaQQ', name: 'Glenn Greenwald', handle: 'glenngreenwald', subs: 350000 },
+  { id: 'UCEXR8pRTkE2vFeJePNe9UcQ', name: 'The Grayzone', handle: 'thegrayzone7996', subs: 300000 },
+  { id: 'UCwvYhFMiOGdxOMOWw0hSCmA', name: 'Owen Shroyer', handle: 'owenreport', subs: 60000 }
 ];
 
-function timeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now - date) / 1000);
+// ─── In-memory cache (persists across warm Vercel invocations) ───
+const videoCache = {};        // { channelId: { data, timestamp } }
+const STALE_TTL = 86400000;   // 24 hours — absolute max age before discarding
 
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-    if (seconds < 172800) return 'yesterday';
-    if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
-    return Math.floor(seconds / 604800) + 'w ago';
+// ─── Retry with exponential backoff ───
+async function fetchWithRetry(url, retries = 3) {
+  const delays = [500, 1000, 2000];
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response;
+      if ([429, 500, 502, 503, 504].includes(response.status)) {
+        if (attempt < retries - 1) {
+          await sleep(delays[attempt]);
+          continue;
+        }
+      }
+      throw new Error(`Feed fetch failed (${response.status})`);
+    } catch (err) {
+      if (attempt < retries - 1) {
+        await sleep(delays[attempt]);
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function timeAgo(dateString) {
+  const now = new Date();
+  const date = new Date(dateString);
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+  if (seconds < 172800) return 'yesterday';
+  if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
+  return Math.floor(seconds / 604800) + 'w ago';
+}
+
+// ─── Fetch a single channel's latest video ───
 async function fetchYouTubeVideo(channel) {
-    const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+  const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+  const response = await fetchWithRetry(feedUrl);
+  const xml = await response.text();
 
-    const response = await fetch(feedUrl);
-    if (!response.ok) {
-        throw new Error(`Feed fetch failed (${response.status})`);
+  const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
+  if (!entryMatch) throw new Error('No entries in feed');
+
+  const entry = entryMatch[1];
+  const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1];
+  const title = entry.match(/<title>([^<]+)<\/title>/)?.[1];
+  const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
+
+  if (!videoId || !title) throw new Error('Could not parse video data');
+
+  const decodedTitle = title
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  return {
+    id: videoId,
+    title: decodedTitle,
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+    source: channel.name,
+    sourceHandle: channel.handle,
+    platform: 'youtube',
+    pubDate: published,
+    timeAgo: timeAgo(published),
+    subs: channel.subs
+  };
+}
+
+// ─── Fetch with cache fallback ───
+async function fetchVideoWithCache(channel) {
+  try {
+    const data = await fetchYouTubeVideo(channel);
+    videoCache[channel.id] = { data, timestamp: Date.now() };
+    return { data, stale: false };
+  } catch (err) {
+    const cached = videoCache[channel.id];
+    if (cached && (Date.now() - cached.timestamp) < STALE_TTL) {
+      cached.data.timeAgo = timeAgo(cached.data.pubDate);
+      return { data: cached.data, stale: true, error: err.message };
     }
-
-    const xml = await response.text();
-
-    const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
-    if (!entryMatch) {
-        throw new Error('No entries in feed');
-    }
-
-    const entry = entryMatch[1];
-    const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1];
-    const title = entry.match(/<title>([^<]+)<\/title>/)?.[1];
-    const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
-
-    if (!videoId || !title) {
-        throw new Error('Could not parse video data');
-    }
-
-    const decodedTitle = title
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
-    return {
-        id: videoId,
-        title: decodedTitle,
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
-        source: channel.name,
-        sourceHandle: channel.handle,
-        platform: 'youtube',
-        pubDate: published,
-        timeAgo: timeAgo(published),
-        subs: channel.subs
-    };
+    throw err;
+  }
 }
 
 module.exports = async function(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
-    const videos = [];
-    const errors = [];
+  const videos = [];
+  const errors = [];
+  const staleHandles = [];
 
-    const results = await Promise.allSettled(
-        YOUTUBE_CHANNELS.map(channel => fetchYouTubeVideo(channel))
-    );
+  const results = await Promise.allSettled(
+    YOUTUBE_CHANNELS.map(channel => fetchVideoWithCache(channel))
+  );
 
-    results.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value) {
-            videos.push(result.value);
-        } else {
-            errors.push(`${YOUTUBE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
-        }
-    });
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      videos.push(result.value.data);
+      if (result.value.stale) {
+        staleHandles.push(YOUTUBE_CHANNELS[index].handle);
+      }
+    } else {
+      errors.push(`${YOUTUBE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
+    }
+  });
 
-    // Sort by recency (most recent first)
-    videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  // Sort by recency
+  videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-    res.status(200).json({
-        videos: videos,
-        count: videos.length,
-        errors: errors.slice(0, 5),
-        lastUpdated: new Date().toISOString()
-    });
+  res.status(200).json({
+    videos,
+    count: videos.length,
+    errors: errors.slice(0, 5),
+    stale: staleHandles,
+    lastUpdated: new Date().toISOString()
+  });
 };
