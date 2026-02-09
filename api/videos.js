@@ -18,32 +18,8 @@ const YOUTUBE_CHANNELS = [
 ];
 
 // ─── In-memory cache (persists across warm Vercel invocations) ───
-const videoCache = {};        // { channelId: { data, timestamp } }
-const STALE_TTL = 86400000;   // 24 hours — absolute max age before discarding
-
-// ─── Retry with exponential backoff ───
-async function fetchWithRetry(url, retries = 3) {
-  const delays = [500, 1000, 2000];
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return response;
-      if ([429, 500, 502, 503, 504].includes(response.status)) {
-        if (attempt < retries - 1) {
-          await sleep(delays[attempt]);
-          continue;
-        }
-      }
-      throw new Error(`Feed fetch failed (${response.status})`);
-    } catch (err) {
-      if (attempt < retries - 1) {
-        await sleep(delays[attempt]);
-        continue;
-      }
-      throw err;
-    }
-  }
-}
+const videoCache = {};
+const STALE_TTL = 86400000;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -61,10 +37,10 @@ function timeAgo(dateString) {
   return Math.floor(seconds / 604800) + 'w ago';
 }
 
-// ─── Fetch a single channel's latest video ───
 async function fetchYouTubeVideo(channel) {
   const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
-  const response = await fetchWithRetry(feedUrl);
+  const response = await fetch(feedUrl);
+  if (!response.ok) throw new Error(`Feed fetch failed (${response.status})`);
   const xml = await response.text();
 
   const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
@@ -98,69 +74,42 @@ async function fetchYouTubeVideo(channel) {
   };
 }
 
-// ─── Fetch with cache fallback ───
-async function fetchVideoWithCache(channel) {
-  try {
-    const data = await fetchYouTubeVideo(channel);
-    videoCache[channel.id] = { data, timestamp: Date.now() };
-    return { data, stale: false };
-  } catch (err) {
-    const cached = videoCache[channel.id];
-    if (cached && (Date.now() - cached.timestamp) < STALE_TTL) {
-      cached.data.timeAgo = timeAgo(cached.data.pubDate);
-      return { data: cached.data, stale: true, error: err.message };
-    }
-    throw err;
-  }
-}
-
-// ─── Batch fetching to avoid YouTube rate limits ───
-async function fetchInBatches(channels, batchSize = 5) {
-  const videos = [];
-  const errors = [];
-  const staleHandles = [];
-
-  for (let i = 0; i < channels.length; i += batchSize) {
-    const batch = channels.slice(i, i + batchSize);
-    const results = await Promise.allSettled(
-      batch.map(channel => fetchVideoWithCache(channel))
-    );
-
-    results.forEach((result, idx) => {
-      const channel = batch[idx];
-      if (result.status === 'fulfilled') {
-        videos.push(result.value.data);
-        if (result.value.stale) {
-          staleHandles.push(channel.handle);
-        }
-      } else {
-        errors.push(`${channel.handle}: ${result.reason?.message || 'Failed'}`);
-      }
-    });
-
-    // Delay between batches to avoid YouTube rate limits
-    if (i + batchSize < channels.length) {
-      await sleep(300);
-    }
-  }
-
-  return { videos, errors, staleHandles };
-}
-
 module.exports = async function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
-  const { videos, errors, staleHandles } = await fetchInBatches(YOUTUBE_CHANNELS, 5);
+  const videos = [];
+  const errors = [];
+  const staleHandles = [];
 
-  // Sort by recency
+  // Fetch ONE AT A TIME with delay to avoid YouTube rate limits
+  for (const channel of YOUTUBE_CHANNELS) {
+    try {
+      const data = await fetchYouTubeVideo(channel);
+      videoCache[channel.id] = { data, timestamp: Date.now() };
+      videos.push(data);
+    } catch (err) {
+      // Try cache fallback
+      const cached = videoCache[channel.id];
+      if (cached && (Date.now() - cached.timestamp) < STALE_TTL) {
+        cached.data.timeAgo = timeAgo(cached.data.pubDate);
+        videos.push(cached.data);
+        staleHandles.push(channel.handle);
+      } else {
+        errors.push(`${channel.handle}: ${err.message}`);
+      }
+    }
+    // 200ms delay between each fetch
+    await sleep(200);
+  }
+
   videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
   res.status(200).json({
     videos,
     count: videos.length,
-    errors: errors.slice(0, 5),
+    errors,
     stale: staleHandles,
     lastUpdated: new Date().toISOString()
   });
