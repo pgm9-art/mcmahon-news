@@ -27,6 +27,7 @@ const RUMBLE_CHANNELS = [
 // ─── In-memory cache for resilience ───
 const videoCache = {};
 const STALE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+const RUMBLE_CACHE_TTL = 30 * 60 * 1000; // 30 min — skip refetch if fresh
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -40,7 +41,11 @@ function timeAgo(dateString) {
   return Math.floor(seconds / 604800) + 'w ago';
 }
 
-// ─── YouTube fetch (unchanged) ───
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ─── YouTube fetch ───
 async function fetchYouTubeVideo(channel) {
   const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
   const response = await fetch(feedUrl);
@@ -82,64 +87,92 @@ async function fetchYouTubeVideo(channel) {
   };
 }
 
-// ─── Rumble fetch via OpenRSS ───
+// ─── Rumble fetch via OpenRSS (tries /c/ then /user/ path) ───
 async function fetchRumbleVideo(channel) {
-  const feedUrl = `https://openrss.org/rumble.com/c/${channel.slug}`;
-  const response = await fetch(feedUrl, {
-    headers: { 'User-Agent': 'McMahon.News/1.0 (news aggregator)' }
-  });
-  if (!response.ok) {
-    throw new Error(`OpenRSS fetch failed (${response.status})`);
+  const paths = [
+    `https://openrss.org/feed/rumble.com/c/${channel.slug}`,
+    `https://openrss.org/feed/rumble.com/user/${channel.slug}`
+  ];
+
+  let lastError = null;
+
+  for (const feedUrl of paths) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await sleep(2000 * Math.pow(2, attempt));
+      }
+
+      try {
+        const response = await fetch(feedUrl, {
+          headers: {
+            'User-Agent': 'McMahon.News/1.0 (+https://mcmahon.news; news aggregator)',
+            'Accept': 'application/rss+xml, application/xml, text/xml'
+          }
+        });
+
+        if (response.status === 429) {
+          lastError = new Error(`OpenRSS rate limited (429)`);
+          continue;
+        }
+
+        if (!response.ok) {
+          throw new Error(`OpenRSS fetch failed (${response.status})`);
+        }
+
+        const xml = await response.text();
+
+        if (xml.includes('<!DOCTYPE html>') || xml.includes('<html')) {
+          throw new Error('OpenRSS returned HTML instead of XML');
+        }
+
+        const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+        if (!itemMatch) {
+          throw new Error('No items in feed');
+        }
+
+        const item = itemMatch[1];
+        const title = item.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1]?.trim();
+        const link = item.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
+        const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
+
+        let thumbnail = '';
+        const enclosure = item.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image/)?.[1];
+        const mediaThumbnail = item.match(/<media:thumbnail[^>]+url="([^"]+)"/)?.[1];
+        const descImg = item.match(/<description>[\s\S]*?<img[^>]+src="([^"]+)"/)?.[1];
+        thumbnail = enclosure || mediaThumbnail || descImg || '';
+
+        const cleanTitle = (title || 'Untitled')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+
+        const cleanLink = (link || '').replace(/\s/g, '');
+        const id = cleanLink.split('/').pop()?.split('.')[0] || `rumble-${channel.slug}-${Date.now()}`;
+
+        return {
+          id: id,
+          title: cleanTitle,
+          url: cleanLink,
+          thumbnail: thumbnail,
+          source: channel.name,
+          sourceHandle: channel.handle,
+          platform: 'rumble',
+          pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+          timeAgo: timeAgo(pubDate || new Date().toISOString()),
+          subs: channel.subs
+        };
+      } catch (err) {
+        lastError = err;
+      }
+    }
   }
 
-  const xml = await response.text();
-
-  // OpenRSS returns RSS 2.0 format — find first <item>
-  const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
-  if (!itemMatch) {
-    throw new Error('No items in Rumble feed');
-  }
-
-  const item = itemMatch[1];
-  const title = item.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1]?.trim();
-  const link = item.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
-  const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
-
-  // Thumbnail: try enclosure first, then media:thumbnail, then description img
-  let thumbnail = '';
-  const enclosure = item.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image/)?.[1];
-  const mediaThumbnail = item.match(/<media:thumbnail[^>]+url="([^"]+)"/)?.[1];
-  const descImg = item.match(/<description>[\s\S]*?<img[^>]+src="([^"]+)"/)?.[1];
-  thumbnail = enclosure || mediaThumbnail || descImg || '';
-
-  // Clean up CDATA artifacts
-  const cleanTitle = (title || 'Untitled')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  const cleanLink = (link || '').replace(/\s/g, '');
-
-  // Generate a stable ID from the URL
-  const id = cleanLink.split('/').pop()?.split('.')[0] || `rumble-${channel.slug}-${Date.now()}`;
-
-  return {
-    id: id,
-    title: cleanTitle,
-    url: cleanLink,
-    thumbnail: thumbnail,
-    source: channel.name,
-    sourceHandle: channel.handle,
-    platform: 'rumble',
-    pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-    timeAgo: timeAgo(pubDate || new Date().toISOString()),
-    subs: channel.subs
-  };
+  throw lastError || new Error('Rumble fetch failed after retries');
 }
 
-// ─── Fetch with cache fallback (works for both platforms) ───
+// ─── Fetch with cache fallback ───
 async function fetchVideoWithCache(fetchFn, cacheKey) {
   try {
     const data = await fetchFn();
@@ -164,7 +197,7 @@ module.exports = async function(req, res) {
   const errors = [];
   const staleHandles = [];
 
-  // Fetch YouTube videos
+  // YouTube: fetch in parallel
   const ytResults = await Promise.allSettled(
     YOUTUBE_CHANNELS.map(channel =>
       fetchVideoWithCache(() => fetchYouTubeVideo(channel), `yt-${channel.id}`)
@@ -182,25 +215,33 @@ module.exports = async function(req, res) {
     }
   });
 
-  // Fetch Rumble videos
-  const rumbleResults = await Promise.allSettled(
-    RUMBLE_CHANNELS.map(channel =>
-      fetchVideoWithCache(() => fetchRumbleVideo(channel), `rumble-${channel.slug}`)
-    )
-  );
+  // Rumble: fetch SEQUENTIALLY with delay to respect OpenRSS rate limits
+  for (const channel of RUMBLE_CHANNELS) {
+    const cacheKey = `rumble-${channel.slug}`;
 
-  rumbleResults.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
-      videos.push(result.value.data);
-      if (result.value.stale) {
-        staleHandles.push(RUMBLE_CHANNELS[index].handle);
-      }
-    } else {
-      errors.push(`rumble/${RUMBLE_CHANNELS[index].handle}: ${result.reason?.message || 'Failed'}`);
+    const cached = videoCache[cacheKey];
+    if (cached && (Date.now() - cached.timestamp) < RUMBLE_CACHE_TTL) {
+      cached.data.timeAgo = timeAgo(cached.data.pubDate);
+      videos.push(cached.data);
+      continue;
     }
-  });
 
-  // Sort by recency
+    try {
+      const result = await fetchVideoWithCache(
+        () => fetchRumbleVideo(channel),
+        cacheKey
+      );
+      videos.push(result.data);
+      if (result.stale) {
+        staleHandles.push(channel.handle);
+      }
+    } catch (err) {
+      errors.push(`rumble/${channel.handle}: ${err.message || 'Failed'}`);
+    }
+
+    await sleep(3000);
+  }
+
   videos.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
   res.status(200).json({
