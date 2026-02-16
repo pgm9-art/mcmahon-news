@@ -19,7 +19,7 @@ const YOUTUBE_CHANNELS = [
 ];
 
 // Rumble data fetched from GitHub Gist (updated every 30 min by Mac script)
-const GIST_RAW_URL = 'https://gist.githubusercontent.com/pgm9-art/0dc8ef1986b468b13482180ff382f538/raw/rumble-data.json';
+const GIST_RAW_URL = 'https://gist.githubusercontent.com/pgm9-art/0dc8ef1986b468b13482180ff382f538/raw/rumble-cache.json';
 
 // In-memory cache
 const videoCache = {};
