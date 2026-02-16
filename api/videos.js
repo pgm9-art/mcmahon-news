@@ -19,7 +19,7 @@ const YOUTUBE_CHANNELS = [
 ];
 
 // Rumble data fetched from GitHub Gist (updated every 30 min by Mac script)
-const GIST_RAW_URL = 'https://gist.githubusercontent.com/pgm9-art/0dc8ef1986b468b13482180ff382f538/raw/rumble-cache.json';
+const GIST_RAW_URL = 'https://gist.githubusercontent.com/pgm9-art/0dc8ef1986b468b13482180ff382f538/raw/rumble-data.json';
 
 // In-memory cache
 const videoCache = {};
@@ -71,11 +71,19 @@ async function fetchRumbleFromGist() {
   if (!response.ok) throw new Error(`Gist fetch failed (${response.status})`);
   const data = await response.json();
 
-  if (!data.videos || !Array.isArray(data.videos)) {
-    throw new Error('Invalid Gist data');
+  // Handle both formats: { videos: [...] } or { channels: { handle: videoObj } }
+  let videos = [];
+  if (data.videos && Array.isArray(data.videos)) {
+    videos = data.videos;
+  } else if (data.channels && typeof data.channels === 'object') {
+    videos = Object.values(data.channels).filter(v => v && v.url);
   }
 
-  return data.videos.map(v => ({
+  if (videos.length === 0) {
+    throw new Error('No Rumble videos in Gist');
+  }
+
+  return videos.map(v => ({
     ...v,
     timeAgo: timeAgo(v.pubDate)
   }));
