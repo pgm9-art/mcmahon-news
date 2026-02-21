@@ -37,7 +37,7 @@ const X_ACCOUNTS = [
   { handle: 'KimIversen', name: 'Kim Iversen', followers: 500000 },
   { handle: 'TheGrayzoneNews', name: 'The Grayzone', followers: 500000 },
   { handle: 'Geopolitics_Emp', name: 'Geopolitics & Empire', followers: 500000 },
-  { handle: 'LeeFang', name: 'Lee Fang', followers: 500000 },
+  { handle: 'lhfang', name: 'Lee Fang', followers: 500000 },
   { handle: 'aaronjmate', name: 'Aaron Maté', followers: 482000 },
   { handle: 'DropSiteNews', name: 'Drop Site News', followers: 400000 },
   { handle: 'MaxBlumenthal', name: 'Max Blumenthal', followers: 400000 },
