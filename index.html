@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McMahon.News — Independent News Aggregator</title>
-    <meta name="description" content="Independent news aggregator featuring Tucker Carlson, Glenn Greenwald, Breaking Points, Joe Rogan, and more. Zero corporate media.">
+    <meta name="description" content="Independent news aggregator featuring 44 voices: Tucker Carlson, Joe Rogan, Glenn Greenwald, Candace Owens, and more. Zero corporate media. Real-time X posts.">
     <meta name="google-site-verification" content="rUKGtA5UbmgowBO262hddlss2w9tpBbnQafnsv6ptIQ" />
-        <!-- Analytics -->
-        <script defer data-domain="mcmahon.news" src="https://plausible.io/js/script.js"></script>
+    <!-- Analytics -->
+    <script defer data-domain="mcmahon.news" src="https://plausible.io/js/script.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         :root {
             --red: #cc0000;
             --black: #111;
@@ -22,13 +21,11 @@
             --gray-400: #a3a3a3;
             --gray-600: #525252;
         }
-        
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--gray-100);
             color: var(--black);
         }
-        
         .top-bar {
             background: var(--black);
             color: var(--white);
@@ -39,51 +36,32 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
-        
         header {
             background: var(--white);
             padding: 15px 20px;
             text-align: center;
             border-bottom: 3px solid var(--red);
         }
-        
-        .logo {
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--black);
-        }
+        .logo { font-size: 2rem; font-weight: 900; color: var(--black); }
         .logo span { color: var(--red); }
-        
-        .date-line {
-            font-size: 0.8rem;
-            color: var(--gray-600);
-            margin-top: 4px;
-        }
-        
-        .main-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-        
-        /* Desktop Layout */
+        .date-line { font-size: 0.8rem; color: var(--gray-600); margin-top: 4px; }
+        .main-container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+
+        /* Desktop Layout — two equal columns */
         .desktop-layout {
             display: none;
-            grid-template-columns: 1fr 3fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
-        
-        @media (min-width: 1024px) {
+        @media (min-width: 768px) {
             .desktop-layout { display: grid; }
             .mobile-layout { display: none; }
         }
-        
         .column {
             background: var(--white);
             border-radius: 8px;
             padding: 12px;
         }
-        
         .column-header {
             display: flex;
             align-items: center;
@@ -92,108 +70,19 @@
             border-bottom: 2px solid var(--gray-200);
             margin-bottom: 12px;
         }
-        
         .column-header h2 {
             font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
         }
-        
-        .desktop-layout > .column:nth-child(2) {
-            display: flex;
-            flex-direction: column;
-        }
-        
         .live-dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: var(--red);
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        
-        /* Video Grid */
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 12px;
-            flex: 1;
-        }
-        
-        .video-card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            text-decoration: none;
-            color: inherit;
-            background: #fafafa;
-            border-radius: 6px;
-            overflow: hidden;
-            transition: transform 0.15s;
-        }
-        .video-card:hover {
-            transform: translateY(-2px);
-        }
-        
-        .video-thumb-wrap {
-            position: relative;
-            flex: 1;
-            min-height: 0;
-            background: #000;
-        }
-        
-        .video-thumb {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .video-platform {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            font-size: 9px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
-            text-transform: uppercase;
-        }
-        
-        .video-info {
-            padding: 8px;
-        }
-        
-        .video-source {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--red);
-            margin-bottom: 4px;
-        }
-        
-        .video-title {
-            font-size: 0.75rem;
-            font-weight: 500;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 4px;
-        }
-        
-        .video-time {
-            font-size: 0.65rem;
-            color: var(--gray-400);
-        }
-        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
         /* Tweet Card */
         .tweet-card {
             display: block;
@@ -205,20 +94,15 @@
             margin-bottom: 8px;
             transition: border-color 0.15s;
         }
-        .tweet-card:hover {
-            border-color: var(--red);
-        }
-        
+        .tweet-card:hover { border-color: var(--red); }
         .tweet-header {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 6px;
         }
-        
         .tweet-avatar {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border-radius: 50%;
             background: var(--gray-200);
             display: flex;
@@ -229,24 +113,13 @@
             color: var(--red);
             flex-shrink: 0;
         }
-        
         .tweet-avatar img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
             object-fit: cover;
         }
-        
-        .tweet-name {
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .tweet-handle {
-            font-size: 0.7rem;
-            color: var(--gray-400);
-        }
-        
+        .tweet-name { font-size: 0.8rem; font-weight: 600; }
+        .tweet-handle { font-size: 0.7rem; color: var(--gray-400); }
         .tweet-text {
             font-size: 0.8rem;
             line-height: 1.4;
@@ -257,55 +130,28 @@
             overflow: hidden;
             margin-bottom: 6px;
         }
-        
-        .tweet-time {
-            font-size: 0.65rem;
-            color: var(--gray-400);
-        }
-        
-        /* Mobile Layout */
+        .tweet-time { font-size: 0.65rem; color: var(--gray-400); }
+
+        /* Mobile Layout — single column */
         .mobile-layout { display: block; }
-        
-        @media (min-width: 1024px) {
+        @media (min-width: 768px) {
             .mobile-layout { display: none; }
         }
-        
-        .mobile-tabs {
+        .mobile-header {
             display: flex;
+            align-items: center;
+            gap: 8px;
             background: var(--white);
             border-radius: 8px;
+            padding: 12px;
             margin-bottom: 12px;
         }
-        
-        .mobile-tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
+        .mobile-header h2 {
             font-size: 0.9rem;
-            font-weight: 600;
-            border: none;
-            background: var(--white);
-            color: var(--gray-400);
-            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
         }
-        .mobile-tab.active {
-            color: var(--red);
-            box-shadow: inset 0 -2px 0 var(--red);
-        }
-        
-        .mobile-content { display: none; }
-        .mobile-content.active { display: block; }
-        
-        .mobile-video-list .video-grid {
-            grid-template-columns: 1fr;
-            grid-template-rows: unset;
-        }
-        
-        .mobile-video-list .video-thumb-wrap {
-            aspect-ratio: 16/9;
-            flex: unset;
-        }
-        
+
         footer {
             background: var(--black);
             color: var(--gray-400);
@@ -314,30 +160,20 @@
             margin-top: 30px;
             font-size: 0.75rem;
         }
-        
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: var(--gray-400);
-        }
-        
-        .error {
-            text-align: center;
-            padding: 20px;
-            color: var(--red);
-        }
+        .loading { text-align: center; padding: 30px; color: var(--gray-400); }
+        .error { text-align: center; padding: 20px; color: var(--red); }
     </style>
 </head>
 <body>
     <div class="top-bar">100% Independent. Zero Corporate Media.</div>
-    
+
     <header>
         <div class="logo">McMahon<span>.NEWS</span></div>
         <div class="date-line" id="dateLine"></div>
     </header>
-    
+
     <main class="main-container">
-        <!-- Desktop -->
+        <!-- Desktop: Two columns -->
         <div class="desktop-layout">
             <div class="column">
                 <div class="column-header">
@@ -347,16 +183,6 @@
                 </div>
                 <div id="tweetsLeft" class="loading">Loading...</div>
             </div>
-            
-            <div class="column">
-                <div class="column-header">
-                    <span>📺</span>
-                    <h2>Latest Videos</h2>
-                    <div class="live-dot"></div>
-                </div>
-                <div id="videosCenter" class="video-grid loading">Loading...</div>
-            </div>
-            
             <div class="column">
                 <div class="column-header">
                     <span>𝕏</span>
@@ -366,65 +192,29 @@
                 <div id="tweetsRight" class="loading">Loading...</div>
             </div>
         </div>
-        
-        <!-- Mobile -->
+
+        <!-- Mobile: Single feed -->
         <div class="mobile-layout">
-            <div class="mobile-tabs">
-                <button class="mobile-tab active" data-tab="videos">📺 Videos</button>
-                <button class="mobile-tab" data-tab="posts">𝕏 Posts</button>
+            <div class="mobile-header">
+                <span>𝕏</span>
+                <h2>X Posts</h2>
+                <div class="live-dot"></div>
             </div>
-            <div id="mobileVideos" class="mobile-content active mobile-video-list">
-                <div id="videosMobile" class="video-grid loading">Loading...</div>
-            </div>
-            <div id="mobilePosts" class="mobile-content">
-                <div id="tweetsMobile" class="loading">Loading...</div>
-            </div>
+            <div id="tweetsMobile" class="loading">Loading...</div>
         </div>
     </main>
-    
+
     <footer>
         <div>McMahon.News — Independent News Aggregation</div>
         <div style="margin-top:8px">Last updated: <span id="lastUpdated">--</span></div>
     </footer>
-    
+
     <script>
     (function() {
         document.getElementById('dateLine').textContent = new Date().toLocaleDateString('en-US', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
-        
-        document.querySelectorAll('.mobile-tab').forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.mobile-tab').forEach(function(t) { t.classList.remove('active'); });
-                document.querySelectorAll('.mobile-content').forEach(function(c) { c.classList.remove('active'); });
-                this.classList.add('active');
-                document.getElementById('mobile' + (this.dataset.tab === 'videos' ? 'Videos' : 'Posts')).classList.add('active');
-            });
-        });
-        
-        function renderVideos(videos, containerId) {
-            var container = document.getElementById(containerId);
-            if (!videos || !videos.length) {
-                container.innerHTML = '<div class="error">No videos available</div>';
-                container.classList.remove('loading');
-                return;
-            }
-            
-            container.innerHTML = videos.map(function(v) {
-                return '<a href="' + v.url + '" target="_blank" class="video-card">' +
-                    '<div class="video-thumb-wrap">' +
-                    '<img class="video-thumb" src="' + (v.thumbnail || '') + '" alt="" loading="lazy">' +
-                    '<span class="video-platform">' + v.platform + '</span>' +
-                    '</div>' +
-                    '<div class="video-info">' +
-                    '<div class="video-source">' + v.source + '</div>' +
-                    '<div class="video-title">' + v.title + '</div>' +
-                    '<div class="video-time">' + v.timeAgo + '</div>' +
-                    '</div></a>';
-            }).join('');
-            container.classList.remove('loading');
-        }
-        
+
         function renderTweets(tweets, containerId) {
             var container = document.getElementById(containerId);
             if (!tweets || !tweets.length) {
@@ -432,13 +222,11 @@
                 container.classList.remove('loading');
                 return;
             }
-            
             container.innerHTML = tweets.map(function(t) {
                 var initial = t.source.charAt(0);
-                var avatarContent = t.profileImage 
+                var avatarContent = t.profileImage
                     ? '<img src="' + t.profileImage + '" alt="" onerror="this.parentElement.innerHTML=\'' + initial + '\'">'
                     : initial;
-                
                 return '<a href="' + t.url + '" target="_blank" class="tweet-card">' +
                     '<div class="tweet-header">' +
                     '<div class="tweet-avatar">' + avatarContent + '</div>' +
@@ -451,39 +239,24 @@
             }).join('');
             container.classList.remove('loading');
         }
-        
+
         function loadData() {
-            fetch('/api/videos')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.videos) {
-                        renderVideos(data.videos, 'videosCenter');
-                        renderVideos(data.videos, 'videosMobile');
-                    }
-                    if (data.lastUpdated) {
-                        document.getElementById('lastUpdated').textContent = new Date(data.lastUpdated).toLocaleTimeString();
-                    }
-                })
-                .catch(function() {
-                    document.getElementById('videosCenter').innerHTML = '<div class="error">Failed to load</div>';
-                    document.getElementById('videosMobile').innerHTML = '<div class="error">Failed to load</div>';
-                });
-            
             fetch('/api/tweets')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    // Use pre-sorted left/right arrays from API (zigzag by follower count)
                     if (data.left && data.right) {
                         renderTweets(data.left, 'tweetsLeft');
                         renderTweets(data.right, 'tweetsRight');
                     } else if (data.tweets) {
-                        // Fallback: split in half
-                        renderTweets(data.tweets.slice(0, 11), 'tweetsLeft');
-                        renderTweets(data.tweets.slice(11, 22), 'tweetsRight');
+                        var half = Math.ceil(data.tweets.length / 2);
+                        renderTweets(data.tweets.slice(0, half), 'tweetsLeft');
+                        renderTweets(data.tweets.slice(half), 'tweetsRight');
                     }
-                    // Mobile gets all tweets sorted by followers
                     if (data.tweets) {
                         renderTweets(data.tweets, 'tweetsMobile');
+                    }
+                    if (data.lastUpdated) {
+                        document.getElementById('lastUpdated').textContent = new Date(data.lastUpdated).toLocaleTimeString();
                     }
                 })
                 .catch(function() {
@@ -492,7 +265,7 @@
                     document.getElementById('tweetsMobile').innerHTML = '<div class="error">Failed to load</div>';
                 });
         }
-        
+
         loadData();
         setInterval(loadData, 30 * 60 * 1000);
     })();
