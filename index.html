@@ -6,7 +6,6 @@
     <title>McMahon.News — Independent News Aggregator</title>
     <meta name="description" content="Independent news aggregator featuring 44 voices: Tucker Carlson, Joe Rogan, Glenn Greenwald, Candace Owens, and more. Zero corporate media. Real-time X posts.">
     <meta name="google-site-verification" content="rUKGtA5UbmgowBO262hddlss2w9tpBbnQafnsv6ptIQ" />
-    <!-- Analytics -->
     <script defer data-domain="mcmahon.news" src="https://plausible.io/js/script.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -45,32 +44,85 @@
         .logo { font-size: 2rem; font-weight: 900; color: var(--black); }
         .logo span { color: var(--red); }
         .date-line { font-size: 0.8rem; color: var(--gray-600); margin-top: 4px; }
-        .main-container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 15px; }
 
-        /* Desktop Layout — two equal columns */
-        .desktop-layout {
-            display: none;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        /* Desktop: 4-column grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
         }
-        @media (min-width: 768px) {
-            .desktop-layout { display: grid; }
-            .mobile-layout { display: none; }
+        @media (max-width: 1024px) {
+            .grid { grid-template-columns: 1fr 1fr; }
         }
-        .column {
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Tweet Card */
+        .tweet-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 10px;
+            border-radius: 6px;
             background: var(--white);
-            border-radius: 8px;
-            padding: 12px;
+            border: 1px solid var(--gray-200);
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .column-header {
+        .tweet-card:hover {
+            border-color: var(--red);
+            box-shadow: 0 2px 8px rgba(204,0,0,0.08);
+        }
+        .tweet-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 6px;
+        }
+        .tweet-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--red);
+            flex-shrink: 0;
+        }
+        .tweet-avatar img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .tweet-name { font-size: 0.75rem; font-weight: 600; }
+        .tweet-handle { font-size: 0.65rem; color: var(--gray-400); }
+        .tweet-text {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--gray-600);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        .tweet-time { font-size: 0.6rem; color: var(--gray-400); }
+
+        .sub-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 12px;
         }
-        .column-header h2 {
+        .sub-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sub-header h2 {
             font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -82,74 +134,9 @@
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        /* Tweet Card */
-        .tweet-card {
-            display: block;
-            text-decoration: none;
-            color: inherit;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--gray-200);
-            margin-bottom: 8px;
-            transition: border-color 0.15s;
-        }
-        .tweet-card:hover { border-color: var(--red); }
-        .tweet-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-        .tweet-avatar {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            background: var(--gray-200);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--red);
-            flex-shrink: 0;
-        }
-        .tweet-avatar img {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .tweet-name { font-size: 0.8rem; font-weight: 600; }
-        .tweet-handle { font-size: 0.7rem; color: var(--gray-400); }
-        .tweet-text {
-            font-size: 0.8rem;
-            line-height: 1.4;
-            color: var(--gray-600);
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-        .tweet-time { font-size: 0.65rem; color: var(--gray-400); }
-
-        /* Mobile Layout — single column */
-        .mobile-layout { display: block; }
-        @media (min-width: 768px) {
-            .mobile-layout { display: none; }
-        }
-        .mobile-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--white);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-        .mobile-header h2 {
-            font-size: 0.9rem;
-            font-weight: 700;
-            text-transform: uppercase;
+        .last-updated {
+            font-size: 0.65rem;
+            color: var(--gray-400);
         }
 
         footer {
@@ -160,8 +147,12 @@
             margin-top: 30px;
             font-size: 0.75rem;
         }
-        .loading { text-align: center; padding: 30px; color: var(--gray-400); }
-        .error { text-align: center; padding: 20px; color: var(--red); }
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--gray-400);
+        }
     </style>
 </head>
 <body>
@@ -173,40 +164,21 @@
     </header>
 
     <main class="main-container">
-        <!-- Desktop: Two columns -->
-        <div class="desktop-layout">
-            <div class="column">
-                <div class="column-header">
-                    <span>𝕏</span>
-                    <h2>X Posts</h2>
-                    <div class="live-dot"></div>
-                </div>
-                <div id="tweetsLeft" class="loading">Loading...</div>
-            </div>
-            <div class="column">
-                <div class="column-header">
-                    <span>𝕏</span>
-                    <h2>X Posts</h2>
-                    <div class="live-dot"></div>
-                </div>
-                <div id="tweetsRight" class="loading">Loading...</div>
-            </div>
-        </div>
-
-        <!-- Mobile: Single feed -->
-        <div class="mobile-layout">
-            <div class="mobile-header">
+        <div class="sub-header">
+            <div class="sub-header-left">
                 <span>𝕏</span>
-                <h2>X Posts</h2>
+                <h2>Latest Posts</h2>
                 <div class="live-dot"></div>
             </div>
-            <div id="tweetsMobile" class="loading">Loading...</div>
+            <div class="last-updated">Updated: <span id="lastUpdated">--</span></div>
+        </div>
+        <div class="grid" id="tweetGrid">
+            <div class="loading-state">Loading...</div>
         </div>
     </main>
 
     <footer>
         <div>McMahon.News — Independent News Aggregation</div>
-        <div style="margin-top:8px">Last updated: <span id="lastUpdated">--</span></div>
     </footer>
 
     <script>
@@ -215,14 +187,13 @@
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        function renderTweets(tweets, containerId) {
-            var container = document.getElementById(containerId);
+        function renderGrid(tweets) {
+            var grid = document.getElementById('tweetGrid');
             if (!tweets || !tweets.length) {
-                container.innerHTML = '<div class="error">No posts available</div>';
-                container.classList.remove('loading');
+                grid.innerHTML = '<div class="loading-state" style="color:var(--red)">No posts available</div>';
                 return;
             }
-            container.innerHTML = tweets.map(function(t) {
+            grid.innerHTML = tweets.map(function(t) {
                 var initial = t.source.charAt(0);
                 var avatarContent = t.profileImage
                     ? '<img src="' + t.profileImage + '" alt="" onerror="this.parentElement.innerHTML=\'' + initial + '\'">'
@@ -237,32 +208,23 @@
                     '<div class="tweet-time">' + t.timeAgo + '</div>' +
                     '</a>';
             }).join('');
-            container.classList.remove('loading');
         }
 
         function loadData() {
             fetch('/api/tweets')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.left && data.right) {
-                        renderTweets(data.left, 'tweetsLeft');
-                        renderTweets(data.right, 'tweetsRight');
-                    } else if (data.tweets) {
-                        var half = Math.ceil(data.tweets.length / 2);
-                        renderTweets(data.tweets.slice(0, half), 'tweetsLeft');
-                        renderTweets(data.tweets.slice(half), 'tweetsRight');
-                    }
-                    if (data.tweets) {
-                        renderTweets(data.tweets, 'tweetsMobile');
-                    }
+                    var tweets = data.tweets || [];
+                    tweets.sort(function(a, b) {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    });
+                    renderGrid(tweets);
                     if (data.lastUpdated) {
                         document.getElementById('lastUpdated').textContent = new Date(data.lastUpdated).toLocaleTimeString();
                     }
                 })
                 .catch(function() {
-                    document.getElementById('tweetsLeft').innerHTML = '<div class="error">Failed to load</div>';
-                    document.getElementById('tweetsRight').innerHTML = '<div class="error">Failed to load</div>';
-                    document.getElementById('tweetsMobile').innerHTML = '<div class="error">Failed to load</div>';
+                    document.getElementById('tweetGrid').innerHTML = '<div class="loading-state" style="color:var(--red)">Failed to load</div>';
                 });
         }
 
