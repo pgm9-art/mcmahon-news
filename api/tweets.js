@@ -1,31 +1,53 @@
-// X Sources — 22 accounts
+// X Sources — 44 accounts
 const X_ACCOUNTS = [
+  { handle: 'joerogan', name: 'Joe Rogan', followers: 18000000 },
   { handle: 'TuckerCarlson', name: 'Tucker Carlson', followers: 17000000 },
+  { handle: 'RealCandaceO', name: 'Candace Owens', followers: 5700000 },
+  { handle: 'libsoftiktok', name: 'Libs of TikTok', followers: 3700000 },
   { handle: 'EndWokeness', name: 'End Wokeness', followers: 3200000 },
+  { handle: 'CollinRugg', name: 'Collin Rugg', followers: 3200000 },
+  { handle: 'JackPosobiec', name: 'Jack Posobiec', followers: 3000000 },
+  { handle: 'jacksonhinklle', name: 'Jackson Hinkle', followers: 3000000 },
   { handle: 'MarioNawfal', name: 'Mario Nawfal', followers: 2800000 },
+  { handle: 'DC_Draino', name: 'DC Draino', followers: 2500000 },
+  { handle: 'TimDillon', name: 'Tim Dillon', followers: 2500000 },
   { handle: 'ggreenwald', name: 'Glenn Greenwald', followers: 2100000 },
+  { handle: 'PrisonPlanet', name: 'Paul Joseph Watson', followers: 2000000 },
+  { handle: 'mtaibbi', name: 'Matt Taibbi', followers: 2000000 },
   { handle: 'shellenberger', name: 'Michael Shellenberger', followers: 2000000 },
   { handle: 'BretWeinstein', name: 'Bret Weinstein', followers: 1800000 },
   { handle: 'VigilantFox', name: 'Vigilant Fox', followers: 1500000 },
+  { handle: 'LauraLoomer', name: 'Laura Loomer', followers: 1500000 },
+  { handle: 'ZubyMusic', name: 'Zuby', followers: 1500000 },
+  { handle: 'LaraLogan', name: 'Lara Logan', followers: 1500000 },
   { handle: 'WallStreetApes', name: 'Wall Street Apes', followers: 1200000 },
   { handle: 'jimmy_dore', name: 'Jimmy Dore', followers: 1200000 },
   { handle: 'NickJFuentes', name: 'Nick Fuentes', followers: 1100000 },
+  { handle: 'KanekoaTheGreat', name: 'Kanekoa', followers: 1000000 },
+  { handle: 'PeterSchiff', name: 'Peter Schiff', followers: 1000000 },
+  { handle: 'WallStreetSilv', name: 'Wall Street Silver', followers: 1000000 },
+  { handle: 'DougAMacgregor', name: 'Col. Douglas Macgregor', followers: 900000 },
   { handle: 'AFpost', name: 'AF Post', followers: 800000 },
   { handle: 'OwenShroyer1776', name: 'Owen Shroyer', followers: 800000 },
+  { handle: 'TracyBeanz', name: 'Tracy Beanz', followers: 700000 },
   { handle: 'realstewpeters', name: 'Stew Peters', followers: 700000 },
   { handle: 'ComicDaveSmith', name: 'Dave Smith', followers: 600000 },
   { handle: 'TheYoungTurks', name: 'The Young Turks', followers: 600000 },
+  { handle: 'ScottRitter', name: 'Scott Ritter', followers: 600000 },
+  { handle: 'KimIversen', name: 'Kim Iversen', followers: 500000 },
   { handle: 'TheGrayzoneNews', name: 'The Grayzone', followers: 500000 },
+  { handle: 'Geopolitics_Emp', name: 'Geopolitics & Empire', followers: 500000 },
+  { handle: 'LeeFang', name: 'Lee Fang', followers: 500000 },
+  { handle: 'aaronjmate', name: 'Aaron Maté', followers: 482000 },
   { handle: 'DropSiteNews', name: 'Drop Site News', followers: 400000 },
-  { handle: 'iancarrollshow', name: 'Ian Carroll', followers: 300000 },
-  { handle: 'RealCandaceO', name: 'Candace Owens', followers: 5700000 },
-  { handle: 'DougAMacgregor', name: 'Col. Douglas Macgregor', followers: 900000 },
-  { handle: 'CollinRugg', name: 'Collin Rugg', followers: 3200000 },
-  { handle: 'libsoftiktok', name: 'Libs of TikTok', followers: 3700000 }
+  { handle: 'MaxBlumenthal', name: 'Max Blumenthal', followers: 400000 },
+  { handle: 'KenKlippenstein', name: 'Ken Klippenstein', followers: 400000 },
+  { handle: 'RealTimBlack', name: 'Tim Black', followers: 400000 },
+  { handle: 'iancarrollshow', name: 'Ian Carroll', followers: 300000 }
 ];
 
 // ─── In-memory cache (persists across warm Vercel invocations) ───
-const tweetCache = {};       // { handle: { data, timestamp } }
+const tweetCache = {};  // { handle: { data, timestamp } }
 const STALE_TTL = 86400000;  // 24 hours — absolute max age before discarding
 
 // ─── Retry with exponential backoff ───
@@ -52,9 +74,7 @@ async function fetchWithRetry(url, options, retries = 3) {
   throw lastError;
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 // ─── Fetch a single account's tweet ───
 async function fetchTweet(account, bearerToken) {
@@ -134,8 +154,8 @@ function distributeZigzag(sortedTweets) {
   return { left, right };
 }
 
-// ─── Parallel batch fetching ───
-async function fetchInBatches(accounts, bearerToken, batchSize = 5) {
+// ─── Parallel batch fetching (smaller batches for 44 accounts) ───
+async function fetchInBatches(accounts, bearerToken, batchSize = 4) {
   const tweets = [];
   const errors = [];
   const staleHandles = [];
@@ -158,9 +178,9 @@ async function fetchInBatches(accounts, bearerToken, batchSize = 5) {
       }
     });
 
-    // Small delay between batches to respect rate limits
+    // 300ms delay between batches to stay under rate limits (44 accounts = 88 calls)
     if (i + batchSize < accounts.length) {
-      await sleep(200);
+      await sleep(300);
     }
   }
 
@@ -180,7 +200,7 @@ module.exports = async function(req, res) {
     });
   }
 
-  const { tweets, errors, staleHandles } = await fetchInBatches(X_ACCOUNTS, bearerToken, 5);
+  const { tweets, errors, staleHandles } = await fetchInBatches(X_ACCOUNTS, bearerToken, 4);
 
   // Sort by recency
   tweets.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
